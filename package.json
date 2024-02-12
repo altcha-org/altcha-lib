@@ -1,0 +1,53 @@
+{
+  "name": "altcha-lib",
+  "version": "0.1.0",
+  "description": "A library for creating and verifying ALTCHA challenges for Node.js, Bun and Deno.",
+  "author": "Daniel Regeci",
+  "license": "MIT",
+  "keywords": [
+    "altcha",
+    "captcha",
+    "antispam",
+    "captcha alternative"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "rimraf dist && tsc -p tsconfig.build.json",
+    "denoify": "rimraf deno_dist && denoify && find deno_dist/. -type f -exec sed -i '' -e 's/node:node:/node:/g' {} +",
+    "eslint": "eslint ./lib/**/*",
+    "format": "prettier --write './(lib|tests)/**/*'",
+    "test": "vitest",
+    "test:deno": "deno test tests/deno.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "types": [
+        "./dist/types"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "denoify": "^1.6.9",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.1",
+    "tsx": "^4.0.0",
+    "typescript": "^5.2.2",
+    "vitest": "^1.0.1"
+  }
+}
