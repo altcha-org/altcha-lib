@@ -37,8 +37,10 @@ Parameters:
 - `options: ChallengeOptions`:
   - `algorithm?: string`: Algorithm to use (`SHA-1`, `SHA-256`, `SHA-512`, default: `SHA-256`).
   - `hmacKey: string` (required): Signature HMAC key.
+  - `maxNumber?: number` Optional maximum number for the random number generator (defaults to 1,000,000).
   - `number?: number`: Optional number to use. If not provided, a random number will be generated.
   - `salt?: string`: Optional salt string. If not provided, a random salt will be generated.
+  - `saltLength?: number` Optional maximum lenght of the random salt (in bytes, defaults to 12).
 
 ### `verifySolution(payload, hmacKey)`
 

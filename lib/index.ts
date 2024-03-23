@@ -6,16 +6,19 @@ import type {
   Payload,
 } from './types.js';
 
-const DEFAULT_MAX_NUMBER = 1e7;
+const DEFAULT_MAX_NUMBER = 1e6;
+const DEFAULT_SALT_LEN = 12;
 const DEFAULT_ALG: Algorithm = 'SHA-256';
 
 export async function createChallenge(
   options: ChallengeOptions
 ): Promise<Challenge> {
   const algorithm = options.algorithm || DEFAULT_ALG;
-  const salt = options.salt || ab2hex(randomBytes(12));
+  const maxNumber = options.maxNumber || DEFAULT_MAX_NUMBER;
+  const saltLength = options.saltLength || DEFAULT_SALT_LEN;
+  const salt = options.salt || ab2hex(randomBytes(saltLength));
   const number =
-    options.number === void 0 ? randomInt(DEFAULT_MAX_NUMBER) : options.number;
+    options.number === void 0 ? randomInt(maxNumber) : options.number;
   const challenge = await hash(algorithm, salt + number);
   return {
     algorithm,

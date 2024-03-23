@@ -10,8 +10,10 @@ export interface Challenge {
 export interface ChallengeOptions {
   algorithm?: Algorithm;
   hmacKey: string;
+  maxNumber?: number;
   number?: number;
   salt?: string;
+  saltLength?: number;
 }
 
 export interface Payload {
