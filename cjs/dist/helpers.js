@@ -1,31 +1,39 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.randomInt = exports.randomBytes = exports.hmac = exports.hash = exports.ab2hex = void 0;
 const encoder = new TextEncoder();
 if (!('crypto' in globalThis)) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     globalThis.crypto = require('node:crypto').webcrypto;
 }
-export function ab2hex(ab) {
+function ab2hex(ab) {
     return [...new Uint8Array(ab)]
         .map((x) => x.toString(16).padStart(2, '0'))
         .join('');
 }
-export async function hash(algorithm, str) {
+exports.ab2hex = ab2hex;
+async function hash(algorithm, str) {
     return ab2hex(await crypto.subtle.digest(algorithm.toUpperCase(), encoder.encode(str)));
 }
-export async function hmac(algorithm, str, secret) {
+exports.hash = hash;
+async function hmac(algorithm, str, secret) {
     const key = await crypto.subtle.importKey('raw', encoder.encode(secret), {
         name: 'HMAC',
         hash: algorithm,
     }, false, ['sign', 'verify']);
     return ab2hex(await crypto.subtle.sign('HMAC', key, encoder.encode(str)));
 }
-export function randomBytes(length) {
+exports.hmac = hmac;
+function randomBytes(length) {
     const ab = new Uint8Array(length);
     crypto.getRandomValues(ab);
     return ab;
 }
-export function randomInt(max) {
+exports.randomBytes = randomBytes;
+function randomInt(max) {
     const ab = new Uint32Array(1);
     crypto.getRandomValues(ab);
     const randomNumber = ab[0] / (0xffffffff + 1);
     return Math.floor(randomNumber * max + 1);
 }
+exports.randomInt = randomInt;

@@ -3,8 +3,8 @@ import type { Algorithm } from './types.js';
 const encoder = new TextEncoder();
 
 if (!('crypto' in globalThis)) {
-  // @ts-ignore
-  globalThis.crypto = (await import('node:crypto')).webcrypto;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  globalThis.crypto = require('node:crypto').webcrypto;
 }
 
 export function ab2hex(ab: ArrayBuffer | Uint8Array) {
