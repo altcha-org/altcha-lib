@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.randomInt = exports.randomBytes = exports.hmac = exports.hash = exports.ab2hex = exports.encoder = void 0;
+// @denoify-line-ignore
 require("./crypto.js");
 exports.encoder = new TextEncoder();
 function ab2hex(ab) {

@@ -1,3 +1,4 @@
+// @denoify-line-ignore
 import './crypto.js';
 export const encoder = new TextEncoder();
 export function ab2hex(ab) {

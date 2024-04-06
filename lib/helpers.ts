@@ -1,3 +1,4 @@
+// @denoify-line-ignore
 import './crypto.js';
 import type { Algorithm } from './types.js';
 

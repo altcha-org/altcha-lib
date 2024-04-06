@@ -1,4 +1,3 @@
-import './crypto.ts';
 import type { Algorithm } from './types.ts';
 
 export const encoder = new TextEncoder();
