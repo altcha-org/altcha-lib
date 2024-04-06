@@ -5,4 +5,4 @@ export declare function solveChallenge(challenge: string, salt: string, algorith
     promise: Promise<Solution | null>;
     controller: AbortController;
 };
-export declare function solveChallengeWorkers(workerScript: string | URL, concurrency: number, challenge: string, salt: string, algorithm?: string, max?: number, startNumber?: number): Promise<Solution | null>;
+export declare function solveChallengeWorkers(workerScript: string | URL | (() => Worker), concurrency: number, challenge: string, salt: string, algorithm?: string, max?: number, startNumber?: number): Promise<Solution | null>;

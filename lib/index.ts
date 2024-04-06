@@ -92,7 +92,7 @@ export function solveChallenge(
 }
 
 export async function solveChallengeWorkers(
-  workerScript: string | URL,
+  workerScript: string | URL | (() => Worker),
   concurrency: number,
   challenge: string,
   salt: string,
@@ -108,11 +108,15 @@ export async function solveChallengeWorkers(
     throw new Error('Too many workers. Max. 16 allowed workers.');
   }
   for (let i = 0; i < concurrency; i++) {
-    workers.push(
-      new Worker(workerScript, {
-        type: 'module',
-      })
-    );
+    if (typeof workerScript === 'function') {
+      workers.push(workerScript());
+    } else {
+      workers.push(
+        new Worker(workerScript, {
+          type: 'module',
+        })
+      );
+    }
   }
   const step = Math.ceil(max / concurrency);
   const solutions = await Promise.all(

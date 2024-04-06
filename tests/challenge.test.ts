@@ -202,7 +202,9 @@ describe('challenge', () => {
         hmacKey,
       });
       const result = await solveChallengeWorkers(
-        './lib/worker.ts',
+        () => new Worker('./lib/worker.ts', {
+          type: 'module',
+        }),
         4,
         challenge.challenge,
         challenge.salt,
