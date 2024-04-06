@@ -20,6 +20,7 @@ const hmacKey = 'secret hmac key';
 // Create a new challenge and send it to the client:
 const challenge = await createChallenge({
   hmacKey,
+  maxNumber: 100000, // the maximum random number
 });
 
 // When submitted, verify the payload:
@@ -91,8 +92,8 @@ Usage with `altcha-lib/worker`:
 import { solveChallengeWorkers } from 'altcha-lib';
 
 const solution = await solveChallengeWorkers(
-  'altcha-lib/worker', // URL to 
-  8, // spawn 8 workers
+  'altcha-lib/worker', // Worker script URL or path
+  8, // Spawn 8 workers
   challenge,
   salt,
 );
