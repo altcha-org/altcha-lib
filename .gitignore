@@ -1,3 +1,4 @@
 /node_modules
+/benchmark/node_modules
 .TODO
 .DS_Store

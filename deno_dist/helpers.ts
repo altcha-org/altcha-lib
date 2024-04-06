@@ -1,11 +1,7 @@
+import './crypto.ts';
 import type { Algorithm } from './types.ts';
 
-const encoder = new TextEncoder();
-
-if (!('crypto' in globalThis)) {
-  // @ts-ignore
-  globalThis.crypto = (await import('node:crypto')).webcrypto;
-}
+export const encoder = new TextEncoder();
 
 export function ab2hex(ab: ArrayBuffer | Uint8Array) {
   return [...new Uint8Array(ab)]

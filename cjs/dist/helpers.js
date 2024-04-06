@@ -1,11 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.randomInt = exports.randomBytes = exports.hmac = exports.hash = exports.ab2hex = void 0;
-const encoder = new TextEncoder();
-if (!('crypto' in globalThis)) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    globalThis.crypto = require('node:crypto').webcrypto;
-}
+exports.randomInt = exports.randomBytes = exports.hmac = exports.hash = exports.ab2hex = exports.encoder = void 0;
+require("./crypto.js");
+exports.encoder = new TextEncoder();
 function ab2hex(ab) {
     return [...new Uint8Array(ab)]
         .map((x) => x.toString(16).padStart(2, '0'))
@@ -13,15 +10,15 @@ function ab2hex(ab) {
 }
 exports.ab2hex = ab2hex;
 async function hash(algorithm, str) {
-    return ab2hex(await crypto.subtle.digest(algorithm.toUpperCase(), encoder.encode(str)));
+    return ab2hex(await crypto.subtle.digest(algorithm.toUpperCase(), exports.encoder.encode(str)));
 }
 exports.hash = hash;
 async function hmac(algorithm, str, secret) {
-    const key = await crypto.subtle.importKey('raw', encoder.encode(secret), {
+    const key = await crypto.subtle.importKey('raw', exports.encoder.encode(secret), {
         name: 'HMAC',
         hash: algorithm,
     }, false, ['sign', 'verify']);
-    return ab2hex(await crypto.subtle.sign('HMAC', key, encoder.encode(str)));
+    return ab2hex(await crypto.subtle.sign('HMAC', key, exports.encoder.encode(str)));
 }
 exports.hmac = hmac;
 function randomBytes(length) {

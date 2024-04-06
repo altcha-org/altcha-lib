@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "scripts": {
+    "bench": "npx tsx bench.ts"
+  },
+  "devDependencies": {
+    "tinybench": "^2.6.0"
+  }
+}

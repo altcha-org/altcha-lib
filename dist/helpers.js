@@ -1,8 +1,5 @@
-const encoder = new TextEncoder();
-if (!('crypto' in globalThis)) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    globalThis.crypto = require('node:crypto').webcrypto;
-}
+import './crypto.js';
+export const encoder = new TextEncoder();
 export function ab2hex(ab) {
     return [...new Uint8Array(ab)]
         .map((x) => x.toString(16).padStart(2, '0'))

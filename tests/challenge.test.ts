@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createChallenge, verifySolution } from '../lib/index.js';
+import {
+  createChallenge,
+  solveChallenge,
+  solveChallengeWorkers,
+  verifySolution,
+} from '../lib/index.js';
 import { Challenge } from '../lib/types.js';
 
 describe('challenge', () => {
@@ -13,6 +18,7 @@ describe('challenge', () => {
       expect(challenge).toEqual({
         algorithm: 'SHA-256',
         challenge: expect.any(String),
+        max: expect.any(Number),
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
@@ -29,6 +35,7 @@ describe('challenge', () => {
       expect(challenge).toEqual({
         algorithm: 'SHA-1',
         challenge: expect.any(String),
+        max: expect.any(Number),
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
@@ -45,6 +52,7 @@ describe('challenge', () => {
       expect(challenge).toEqual({
         algorithm: 'SHA-512',
         challenge: expect.any(String),
+        max: expect.any(Number),
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
@@ -166,6 +174,41 @@ describe('challenge', () => {
         hmacKey
       );
       expect(ok).toEqual(false);
+    });
+  });
+
+  describe('solveChallenge', () => {
+    it('should solve challenge', async () => {
+      const number = 100;
+      const challenge = await createChallenge({
+        number,
+        hmacKey,
+      });
+      const { promise } = solveChallenge(
+        challenge.challenge,
+        challenge.salt,
+        challenge.algorithm
+      );
+      const result = await promise;
+      expect(result?.number).toEqual(number);
+    });
+  });
+
+  describe.skipIf(!('Worker' in globalThis))('solveChallengeWorkers', () => {
+    it('should solve challenge using workers', async () => {
+      const number = 100;
+      const challenge = await createChallenge({
+        number,
+        hmacKey,
+      });
+      const result = await solveChallengeWorkers(
+        './lib/worker.ts',
+        4,
+        challenge.challenge,
+        challenge.salt,
+        challenge.algorithm
+      );
+      expect(result?.number).toEqual(number);
     });
   });
 });

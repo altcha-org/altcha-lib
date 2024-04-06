@@ -1,5 +1,10 @@
 import { assertEquals } from 'https://deno.land/std@0.213.0/assert/mod.ts';
-import { createChallenge, verifySolution } from '../deno_dist/index.ts';
+import {
+  createChallenge,
+  verifySolution,
+  solveChallenge,
+  solveChallengeWorkers,
+} from '../deno_dist/index.ts';
 
 const hmacKey = 'test';
 
@@ -33,5 +38,35 @@ Deno.test('verifySolution()', async (t) => {
       hmacKey
     );
     assertEquals(ok, true);
+  });
+});
+
+Deno.test('solveChallenge()', async (t) => {
+  await t.step('should solve challenge', async () => {
+    const number = 100;
+    const challenge = await createChallenge({
+      hmacKey,
+      number,
+    });
+    const result = await solveChallenge(challenge.challenge, challenge.salt)
+      .promise;
+    assertEquals(result?.number, number);
+  });
+});
+
+Deno.test('solveChallengeWorkers()', async (t) => {
+  await t.step('should solve challenge', async () => {
+    const number = 100;
+    const challenge = await createChallenge({
+      hmacKey,
+      number,
+    });
+    const result = await solveChallengeWorkers(
+      new URL('../deno_dist/worker.ts', import.meta.url),
+      8,
+      challenge.challenge,
+      challenge.salt
+    );
+    assertEquals(result?.number, number);
   });
 });

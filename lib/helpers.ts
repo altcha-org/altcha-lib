@@ -1,11 +1,7 @@
+import './crypto.js';
 import type { Algorithm } from './types.js';
 
-const encoder = new TextEncoder();
-
-if (!('crypto' in globalThis)) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  globalThis.crypto = require('node:crypto').webcrypto;
-}
+export const encoder = new TextEncoder();
 
 export function ab2hex(ab: ArrayBuffer | Uint8Array) {
   return [...new Uint8Array(ab)]

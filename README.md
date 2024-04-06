@@ -42,6 +42,8 @@ Parameters:
   - `salt?: string`: Optional salt string. If not provided, a random salt will be generated.
   - `saltLength?: number` Optional maximum lenght of the random salt (in bytes, defaults to 12).
 
+Returns: `Promise<Challenge>`
+
 ### `verifySolution(payload, hmacKey)`
 
 Verifies an ALTCHA solution. The payload can be a Base64-encoded JSON payload (as submitted by the widget) or an object.
@@ -50,6 +52,69 @@ Parameters:
 
 - `payload: string | Payload`
 - `hmacKey: string`
+
+Returns: `Promise<boolean>`
+
+### `solveChallenge(challenge, salt, algorithm?, max?, start?)`
+
+Finds a solution to the given challenge. 
+
+Parameters:
+
+- `challenge: string` (required): The challenge hash.
+- `salt: string` (required): The challenge salt.
+- `algorithm?: string`: Optional algorithm (default: `SHA-256`).
+- `max?: string`: Optional `maxnumber` to iterate to (default: 1e6).
+- `start?: string`: Optional starting number (default: 0).
+
+Returns: `{ controller: AbortController, promise: Promise<Solution | null> }`
+
+### `solveChallengeWorkers(workerScript, concurrency, challenge, salt, algorithm?, max?, start?)`
+
+Finds a solution to the given challenge with [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Worker/Worker) running concurrently. 
+
+Parameters:
+
+- `workerScript: string` (required): The path or URL of the worker script.
+- `concurrency: number` (required): The concurrency (number of workers).
+- `challenge: string` (required): The challenge hash.
+- `salt: string` (required): The challenge salt.
+- `algorithm?: string`: Optional algorithm (default: `SHA-256`).
+- `max?: string`: Optional `maxnumber` to iterate to (default: 1e6).
+- `start?: string`: Optional starting number (default: 0).
+
+Returns: `Promise<Solution | null>`
+
+Usage with `altcha-lib/worker`:
+
+```ts
+import { solveChallengeWorkers } from 'altcha-lib';
+
+const solution = await solveChallengeWorkers(
+  'altcha-lib/worker', // URL to 
+  8, // spawn 8 workers
+  challenge,
+  salt,
+);
+```
+
+## Benchmarks
+
+```
+> solveChallenge()
+- n = 1,000...............................        317 ops/s ±2.63%
+- n = 10,000..............................         32 ops/s ±1.88%
+- n = 100,000.............................          3 ops/s ±0.34%
+- n = 500,000.............................          0 ops/s ±0.32%
+
+> solveChallengeWorkers() (8 workers)
+- n = 1,000...............................         66 ops/s ±3.44%
+- n = 10,000..............................         31 ops/s ±4.28%
+- n = 100,000.............................          7 ops/s ±4.40%
+- n = 500,000.............................          1 ops/s ±2.49%
+```
+
+Run with Bun on MacBook Pro M3-Pro. See [/benchmark](/benchmark/) folder for more details.
 
 ## License
 
