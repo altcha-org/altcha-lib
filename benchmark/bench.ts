@@ -23,11 +23,17 @@ const challenge2 = await createChallenge({
 
 const challenge3 = await createChallenge({
   hmacKey,
+  maxNumber: 50000,
+  number: 50000,
+});
+
+const challenge4 = await createChallenge({
+  hmacKey,
   maxNumber: 100000,
   number: 100000,
 });
 
-const challenge4 = await createChallenge({
+const challenge5 = await createChallenge({
   hmacKey,
   maxNumber: 500000,
   number: 500000,
@@ -41,11 +47,14 @@ await benchmark('solveChallenge()', (bench) => {
     .add('n = 10,000', async () => {
       await solveChallenge(challenge2.challenge, challenge2.salt).promise;
     })
-    .add('n = 100,000', async () => {
+    .add('n = 50,000', async () => {
       await solveChallenge(challenge3.challenge, challenge3.salt).promise;
     })
-    .add('n = 500,000', async () => {
+    .add('n = 100,000', async () => {
       await solveChallenge(challenge4.challenge, challenge4.salt).promise;
+    })
+    .add('n = 500,000', async () => {
+      await solveChallenge(challenge5.challenge, challenge5.salt).promise;
     })
 });
 
@@ -71,7 +80,7 @@ await benchmark(`solveChallengeWorkers() (${workers} workers)`, (bench) => {
         challenge2.max,
       );
     })
-    .add('n = 100,000', async () => {
+    .add('n = 50,000', async () => {
       await solveChallengeWorkers(
         workerScript,
         workers,
@@ -81,7 +90,7 @@ await benchmark(`solveChallengeWorkers() (${workers} workers)`, (bench) => {
         challenge3.max,
       );
     })
-    .add('n = 500,000', async () => {
+    .add('n = 100,000', async () => {
       await solveChallengeWorkers(
         workerScript,
         workers,
@@ -89,6 +98,16 @@ await benchmark(`solveChallengeWorkers() (${workers} workers)`, (bench) => {
         challenge4.salt,
         challenge4.algorithm,
         challenge4.max,
+      );
+    })
+    .add('n = 500,000', async () => {
+      await solveChallengeWorkers(
+        workerScript,
+        workers,
+        challenge5.challenge,
+        challenge5.salt,
+        challenge5.algorithm,
+        challenge5.max,
       );
     });
 });
