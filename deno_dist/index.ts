@@ -160,3 +160,10 @@ async function hashChallenge(salt: string, num: number, algorithm: string) {
     )
   );
 }
+
+export default {
+  createChallenge,
+  verifySolution,
+  solveChallenge,
+  solveChallengeWorkers,
+};

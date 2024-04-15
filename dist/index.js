@@ -113,3 +113,9 @@ export async function solveChallengeWorkers(workerScript, concurrency, challenge
 async function hashChallenge(salt, num, algorithm) {
     return ab2hex(await crypto.subtle.digest(algorithm.toUpperCase(), encoder.encode(salt + num)));
 }
+export default {
+    createChallenge,
+    verifySolution,
+    solveChallenge,
+    solveChallengeWorkers,
+};

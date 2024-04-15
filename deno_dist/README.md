@@ -4,7 +4,7 @@ ALTCHA JS Library is a lightweight, zero-dependency library designed for creatin
 
 ## Compatibility
 
-This library utilizes [Web Crypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) and can be used in modern browsers and supported server environments:
+This library utilizes [Web Crypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) and is intended for server-side use.
 
 - Node.js 16+
 - Bun 1+
@@ -103,18 +103,16 @@ const solution = await solveChallengeWorkers(
 
 ```
 > solveChallenge()
-- n = 1,000...............................        319 ops/s ±2.04%
-- n = 10,000..............................         31 ops/s ±1.02%
-- n = 50,000..............................          6 ops/s ±1.48%
-- n = 100,000.............................          3 ops/s ±0.27%
-- n = 500,000.............................          0 ops/s ±0.36%
+- n = 1,000...............................        317 ops/s ±2.63%
+- n = 10,000..............................         32 ops/s ±1.88%
+- n = 100,000.............................          3 ops/s ±0.34%
+- n = 500,000.............................          0 ops/s ±0.32%
 
 > solveChallengeWorkers() (8 workers)
-- n = 1,000...............................         62 ops/s ±5.69%
-- n = 10,000..............................         30 ops/s ±4.35%
-- n = 50,000..............................         12 ops/s ±2.89%
-- n = 100,000.............................          7 ops/s ±2.33%
-- n = 500,000.............................          1 ops/s ±2.22%
+- n = 1,000...............................         66 ops/s ±3.44%
+- n = 10,000..............................         31 ops/s ±4.28%
+- n = 100,000.............................          7 ops/s ±4.40%
+- n = 500,000.............................          1 ops/s ±2.49%
 ```
 
 Run with Bun on MacBook Pro M3-Pro. See [/benchmark](/benchmark/) folder for more details.

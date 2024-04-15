@@ -120,3 +120,9 @@ exports.solveChallengeWorkers = solveChallengeWorkers;
 async function hashChallenge(salt, num, algorithm) {
     return (0, helpers_js_1.ab2hex)(await crypto.subtle.digest(algorithm.toUpperCase(), helpers_js_1.encoder.encode(salt + num)));
 }
+exports.default = {
+    createChallenge,
+    verifySolution,
+    solveChallenge,
+    solveChallengeWorkers,
+};

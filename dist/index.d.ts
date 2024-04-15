@@ -6,3 +6,10 @@ export declare function solveChallenge(challenge: string, salt: string, algorith
     controller: AbortController;
 };
 export declare function solveChallengeWorkers(workerScript: string | URL | (() => Worker), concurrency: number, challenge: string, salt: string, algorithm?: string, max?: number, startNumber?: number): Promise<Solution | null>;
+declare const _default: {
+    createChallenge: typeof createChallenge;
+    verifySolution: typeof verifySolution;
+    solveChallenge: typeof solveChallenge;
+    solveChallengeWorkers: typeof solveChallengeWorkers;
+};
+export default _default;
