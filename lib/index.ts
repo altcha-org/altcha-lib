@@ -1,8 +1,8 @@
 import {
   ab2hex,
-  encoder,
   hash,
-  hmac,
+  hashHex,
+  hmacHex,
   randomBytes,
   randomInt,
 } from './helpers.js';
@@ -11,6 +11,8 @@ import type {
   Challenge,
   ChallengeOptions,
   Payload,
+  ServerSignaturePayload,
+  ServerSignatureVerificationData,
   Solution,
 } from './types.js';
 
@@ -22,17 +24,19 @@ export async function createChallenge(
   options: ChallengeOptions
 ): Promise<Challenge> {
   const algorithm = options.algorithm || DEFAULT_ALG;
-  const max = options.maxNumber || DEFAULT_MAX_NUMBER;
+  const maxnumber =
+    options.maxnumber || options.maxNumber || DEFAULT_MAX_NUMBER;
   const saltLength = options.saltLength || DEFAULT_SALT_LEN;
   const salt = options.salt || ab2hex(randomBytes(saltLength));
-  const number = options.number === void 0 ? randomInt(max) : options.number;
-  const challenge = await hash(algorithm, salt + number);
+  const number =
+    options.number === void 0 ? randomInt(maxnumber) : options.number;
+  const challenge = await hashHex(algorithm, salt + number);
   return {
     algorithm,
     challenge,
-    max,
+    maxnumber,
     salt,
-    signature: await hmac(algorithm, challenge, options.hmacKey),
+    signature: await hmacHex(algorithm, challenge, options.hmacKey),
   };
 }
 
@@ -55,6 +59,46 @@ export async function verifySolution(
   );
 }
 
+export async function verifyServerSignature(
+  payload: string | ServerSignaturePayload,
+  hmacKey: string
+) {
+  if (typeof payload === 'string') {
+    payload = JSON.parse(atob(payload)) as ServerSignaturePayload;
+  }
+  const signature = await hmacHex(
+    payload.algorithm,
+    await hash(payload.algorithm, payload.verificationData),
+    hmacKey
+  );
+  let verificationData: ServerSignatureVerificationData | null = null;
+  try {
+    const params = new URLSearchParams(payload.verificationData);
+    verificationData = {
+      ...Object.fromEntries(params),
+      expire: parseInt(params.get('expire') || '0', 10),
+      fields: params.get('fields')?.split(','),
+      reasons: params.get('reasons')?.split(','),
+      score: params.get('score')
+        ? parseFloat(params.get('score') || '0')
+        : void 0,
+      time: parseInt(params.get('time') || '0', 10),
+      verified: params.get('verified') === 'true',
+    };
+  } catch {
+    // noop
+  }
+  return {
+    verificationData,
+    verified:
+      payload.verified === true &&
+      verificationData &&
+      verificationData.verified === true &&
+      verificationData.expire > Math.floor(Date.now() / 1000) &&
+      payload.signature === signature,
+  };
+}
+
 export function solveChallenge(
   challenge: string,
   salt: string,
@@ -69,7 +113,7 @@ export function solveChallenge(
       if (controller.signal.aborted || n > max) {
         resolve(null);
       } else {
-        hashChallenge(salt, n, algorithm)
+        hashHex(algorithm as Algorithm, salt + n)
           .then((t) => {
             if (t === challenge) {
               resolve({
@@ -152,18 +196,10 @@ export async function solveChallengeWorkers(
   return solutions.find((solution) => !!solution) || null;
 }
 
-async function hashChallenge(salt: string, num: number, algorithm: string) {
-  return ab2hex(
-    await crypto.subtle.digest(
-      algorithm.toUpperCase(),
-      encoder.encode(salt + num)
-    )
-  );
-}
-
 export default {
   createChallenge,
-  verifySolution,
   solveChallenge,
   solveChallengeWorkers,
+  verifyServerSignature,
+  verifySolution,
 };

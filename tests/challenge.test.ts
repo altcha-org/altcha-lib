@@ -18,7 +18,7 @@ describe('challenge', () => {
       expect(challenge).toEqual({
         algorithm: 'SHA-256',
         challenge: expect.any(String),
-        max: expect.any(Number),
+        maxnumber: expect.any(Number),
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
@@ -35,7 +35,7 @@ describe('challenge', () => {
       expect(challenge).toEqual({
         algorithm: 'SHA-1',
         challenge: expect.any(String),
-        max: expect.any(Number),
+        maxnumber: expect.any(Number),
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
@@ -52,7 +52,7 @@ describe('challenge', () => {
       expect(challenge).toEqual({
         algorithm: 'SHA-512',
         challenge: expect.any(String),
-        max: expect.any(Number),
+        maxnumber: expect.any(Number),
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
@@ -202,9 +202,10 @@ describe('challenge', () => {
         hmacKey,
       });
       const result = await solveChallengeWorkers(
-        () => new Worker('./lib/worker.ts', {
-          type: 'module',
-        }),
+        () =>
+          new Worker('./lib/worker.ts', {
+            type: 'module',
+          }),
         4,
         challenge.challenge,
         challenge.salt,

@@ -70,6 +70,17 @@ Parameters:
 
 Returns: `{ controller: AbortController, promise: Promise<Solution | null> }`
 
+### `verifyServerSignature(payload, hmacKey)`
+
+Verifies the server signature returned by the API. The payload can be a Base64-encoded JSON payload or an object.
+
+Parameters:
+
+- `payload: string | ServerSignaturePayload`
+- `hmacKey: string`
+
+Returns: `Promise<{ verificationData: ServerSignatureVerificationData | null, verified: boolean }>`
+
 ### `solveChallengeWorkers(workerScript, concurrency, challenge, salt, algorithm?, max?, start?)`
 
 Finds a solution to the given challenge with [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Worker/Worker) running concurrently. 

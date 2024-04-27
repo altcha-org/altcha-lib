@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.randomInt = exports.randomBytes = exports.hmac = exports.hash = exports.ab2hex = exports.encoder = void 0;
+exports.randomInt = exports.randomBytes = exports.hmacHex = exports.hmac = exports.hashHex = exports.hash = exports.ab2hex = exports.encoder = void 0;
 // @denoify-line-ignore
 require("./crypto.js");
 exports.encoder = new TextEncoder();
@@ -10,18 +10,26 @@ function ab2hex(ab) {
         .join('');
 }
 exports.ab2hex = ab2hex;
-async function hash(algorithm, str) {
-    return ab2hex(await crypto.subtle.digest(algorithm.toUpperCase(), exports.encoder.encode(str)));
+async function hash(algorithm, data) {
+    return crypto.subtle.digest(algorithm.toUpperCase(), typeof data === 'string' ? exports.encoder.encode(data) : new Uint8Array(data));
 }
 exports.hash = hash;
-async function hmac(algorithm, str, secret) {
+async function hashHex(algorithm, data) {
+    return ab2hex(await hash(algorithm, data));
+}
+exports.hashHex = hashHex;
+async function hmac(algorithm, data, secret) {
     const key = await crypto.subtle.importKey('raw', exports.encoder.encode(secret), {
         name: 'HMAC',
         hash: algorithm,
     }, false, ['sign', 'verify']);
-    return ab2hex(await crypto.subtle.sign('HMAC', key, exports.encoder.encode(str)));
+    return crypto.subtle.sign('HMAC', key, typeof data === 'string' ? exports.encoder.encode(data) : new Uint8Array(data));
 }
 exports.hmac = hmac;
+async function hmacHex(algorithm, data, secret) {
+    return ab2hex(await hmac(algorithm, data, secret));
+}
+exports.hmacHex = hmacHex;
 function randomBytes(length) {
     const ab = new Uint8Array(length);
     crypto.getRandomValues(ab);

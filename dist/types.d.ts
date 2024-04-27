@@ -2,13 +2,14 @@ export type Algorithm = 'SHA-1' | 'SHA-256' | 'SHA-512';
 export interface Challenge {
     algorithm: Algorithm;
     challenge: string;
-    max?: number;
+    maxnumber?: number;
     salt: string;
     signature: string;
 }
 export interface ChallengeOptions {
     algorithm?: Algorithm;
     hmacKey: string;
+    maxnumber?: number;
     maxNumber?: number;
     number?: number;
     salt?: string;
@@ -20,6 +21,23 @@ export interface Payload {
     number: number;
     salt: string;
     signature: string;
+}
+export interface ServerSignaturePayload {
+    algorithm: Algorithm;
+    signature: string;
+    verificationData: string;
+    verified: boolean;
+}
+export interface ServerSignatureVerificationData {
+    classification?: string;
+    email?: string;
+    expire: number;
+    fields?: string[];
+    fieldsHash?: string;
+    reasons?: string[];
+    score?: number;
+    time: number;
+    verified: boolean;
 }
 export interface Solution {
     number: number;

@@ -1,23 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.solveChallengeWorkers = exports.solveChallenge = exports.verifySolution = exports.createChallenge = void 0;
+exports.solveChallengeWorkers = exports.solveChallenge = exports.verifyServerSignature = exports.verifySolution = exports.createChallenge = void 0;
 const helpers_js_1 = require("./helpers.js");
 const DEFAULT_MAX_NUMBER = 1e6;
 const DEFAULT_SALT_LEN = 12;
 const DEFAULT_ALG = 'SHA-256';
 async function createChallenge(options) {
     const algorithm = options.algorithm || DEFAULT_ALG;
-    const max = options.maxNumber || DEFAULT_MAX_NUMBER;
+    const maxnumber = options.maxnumber || options.maxNumber || DEFAULT_MAX_NUMBER;
     const saltLength = options.saltLength || DEFAULT_SALT_LEN;
     const salt = options.salt || (0, helpers_js_1.ab2hex)((0, helpers_js_1.randomBytes)(saltLength));
-    const number = options.number === void 0 ? (0, helpers_js_1.randomInt)(max) : options.number;
-    const challenge = await (0, helpers_js_1.hash)(algorithm, salt + number);
+    const number = options.number === void 0 ? (0, helpers_js_1.randomInt)(maxnumber) : options.number;
+    const challenge = await (0, helpers_js_1.hashHex)(algorithm, salt + number);
     return {
         algorithm,
         challenge,
-        max,
+        maxnumber,
         salt,
-        signature: await (0, helpers_js_1.hmac)(algorithm, challenge, options.hmacKey),
+        signature: await (0, helpers_js_1.hmacHex)(algorithm, challenge, options.hmacKey),
     };
 }
 exports.createChallenge = createChallenge;
@@ -35,6 +35,39 @@ async function verifySolution(payload, hmacKey) {
         check.signature === payload.signature);
 }
 exports.verifySolution = verifySolution;
+async function verifyServerSignature(payload, hmacKey) {
+    if (typeof payload === 'string') {
+        payload = JSON.parse(atob(payload));
+    }
+    const signature = await (0, helpers_js_1.hmacHex)(payload.algorithm, await (0, helpers_js_1.hash)(payload.algorithm, payload.verificationData), hmacKey);
+    let verificationData = null;
+    try {
+        const params = new URLSearchParams(payload.verificationData);
+        verificationData = {
+            ...Object.fromEntries(params),
+            expire: parseInt(params.get('expire') || '0', 10),
+            fields: params.get('fields')?.split(','),
+            reasons: params.get('reasons')?.split(','),
+            score: params.get('score')
+                ? parseFloat(params.get('score') || '0')
+                : void 0,
+            time: parseInt(params.get('time') || '0', 10),
+            verified: params.get('verified') === 'true',
+        };
+    }
+    catch {
+        // noop
+    }
+    return {
+        verificationData,
+        verified: payload.verified === true &&
+            verificationData &&
+            verificationData.verified === true &&
+            verificationData.expire > Math.floor(Date.now() / 1000) &&
+            payload.signature === signature,
+    };
+}
+exports.verifyServerSignature = verifyServerSignature;
 function solveChallenge(challenge, salt, algorithm = 'SHA-256', max = 1e6, start = 0) {
     const controller = new AbortController();
     const promise = new Promise((resolve, reject) => {
@@ -44,7 +77,7 @@ function solveChallenge(challenge, salt, algorithm = 'SHA-256', max = 1e6, start
                 resolve(null);
             }
             else {
-                hashChallenge(salt, n, algorithm)
+                (0, helpers_js_1.hashHex)(algorithm, salt + n)
                     .then((t) => {
                     if (t === challenge) {
                         resolve({
@@ -117,12 +150,10 @@ async function solveChallengeWorkers(workerScript, concurrency, challenge, salt,
     return solutions.find((solution) => !!solution) || null;
 }
 exports.solveChallengeWorkers = solveChallengeWorkers;
-async function hashChallenge(salt, num, algorithm) {
-    return (0, helpers_js_1.ab2hex)(await crypto.subtle.digest(algorithm.toUpperCase(), helpers_js_1.encoder.encode(salt + num)));
-}
 exports.default = {
     createChallenge,
-    verifySolution,
     solveChallenge,
     solveChallengeWorkers,
+    verifyServerSignature,
+    verifySolution,
 };

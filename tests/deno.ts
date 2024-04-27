@@ -1,3 +1,7 @@
+/**
+ * Run: deno test --allow-read tests/deno.ts
+ */
+
 import { assertEquals } from 'https://deno.land/std@0.213.0/assert/mod.ts';
 import {
   createChallenge,

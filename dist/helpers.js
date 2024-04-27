@@ -6,15 +6,21 @@ export function ab2hex(ab) {
         .map((x) => x.toString(16).padStart(2, '0'))
         .join('');
 }
-export async function hash(algorithm, str) {
-    return ab2hex(await crypto.subtle.digest(algorithm.toUpperCase(), encoder.encode(str)));
+export async function hash(algorithm, data) {
+    return crypto.subtle.digest(algorithm.toUpperCase(), typeof data === 'string' ? encoder.encode(data) : new Uint8Array(data));
 }
-export async function hmac(algorithm, str, secret) {
+export async function hashHex(algorithm, data) {
+    return ab2hex(await hash(algorithm, data));
+}
+export async function hmac(algorithm, data, secret) {
     const key = await crypto.subtle.importKey('raw', encoder.encode(secret), {
         name: 'HMAC',
         hash: algorithm,
     }, false, ['sign', 'verify']);
-    return ab2hex(await crypto.subtle.sign('HMAC', key, encoder.encode(str)));
+    return crypto.subtle.sign('HMAC', key, typeof data === 'string' ? encoder.encode(data) : new Uint8Array(data));
+}
+export async function hmacHex(algorithm, data, secret) {
+    return ab2hex(await hmac(algorithm, data, secret));
 }
 export function randomBytes(length) {
     const ab = new Uint8Array(length);

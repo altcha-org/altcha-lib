@@ -10,13 +10,25 @@ export function ab2hex(ab: ArrayBuffer | Uint8Array) {
     .join('');
 }
 
-export async function hash(algorithm: Algorithm, str: string) {
-  return ab2hex(
-    await crypto.subtle.digest(algorithm.toUpperCase(), encoder.encode(str))
+export async function hash(algorithm: Algorithm, data: ArrayBuffer | string) {
+  return crypto.subtle.digest(
+    algorithm.toUpperCase(),
+    typeof data === 'string' ? encoder.encode(data) : new Uint8Array(data)
   );
 }
 
-export async function hmac(algorithm: Algorithm, str: string, secret: string) {
+export async function hashHex(
+  algorithm: Algorithm,
+  data: ArrayBuffer | string
+) {
+  return ab2hex(await hash(algorithm, data));
+}
+
+export async function hmac(
+  algorithm: Algorithm,
+  data: ArrayBuffer | string,
+  secret: string
+) {
   const key = await crypto.subtle.importKey(
     'raw',
     encoder.encode(secret),
@@ -27,7 +39,19 @@ export async function hmac(algorithm: Algorithm, str: string, secret: string) {
     false,
     ['sign', 'verify']
   );
-  return ab2hex(await crypto.subtle.sign('HMAC', key, encoder.encode(str)));
+  return crypto.subtle.sign(
+    'HMAC',
+    key,
+    typeof data === 'string' ? encoder.encode(data) : new Uint8Array(data)
+  );
+}
+
+export async function hmacHex(
+  algorithm: Algorithm,
+  data: ArrayBuffer | string,
+  secret: string
+) {
+  return ab2hex(await hmac(algorithm, data, secret));
 }
 
 export function randomBytes(length: number) {
