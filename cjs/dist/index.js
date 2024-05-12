@@ -14,7 +14,8 @@ async function createChallenge(options) {
         params.set('expires', String(Math.floor(options.expires.getTime() / 1000)));
     }
     let salt = options.salt || (0, helpers_js_1.ab2hex)((0, helpers_js_1.randomBytes)(saltLength));
-    if (params.size) {
+    // params.size doesn't work with Node 16
+    if (Object.keys(Object.fromEntries(params)).length) {
         salt = salt + '?' + params.toString();
     }
     const number = options.number === void 0 ? (0, helpers_js_1.randomInt)(maxnumber) : options.number;

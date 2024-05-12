@@ -32,7 +32,8 @@ export async function createChallenge(
     params.set('expires', String(Math.floor(options.expires.getTime() / 1000)));
   }
   let salt = options.salt || ab2hex(randomBytes(saltLength));
-  if (params.size) {
+  // params.size doesn't work with Node 16
+  if (Object.keys(Object.fromEntries(params)).length) {
     salt = salt + '?' + params.toString();
   }
   const number =
