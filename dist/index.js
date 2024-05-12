@@ -6,7 +6,14 @@ export async function createChallenge(options) {
     const algorithm = options.algorithm || DEFAULT_ALG;
     const maxnumber = options.maxnumber || options.maxNumber || DEFAULT_MAX_NUMBER;
     const saltLength = options.saltLength || DEFAULT_SALT_LEN;
-    const salt = options.salt || ab2hex(randomBytes(saltLength));
+    const params = new URLSearchParams(options.params);
+    if (options.expires) {
+        params.set('expires', String(Math.floor(options.expires.getTime() / 1000)));
+    }
+    let salt = options.salt || ab2hex(randomBytes(saltLength));
+    if (params.size) {
+        salt = salt + '?' + params.toString();
+    }
     const number = options.number === void 0 ? randomInt(maxnumber) : options.number;
     const challenge = await hashHex(algorithm, salt + number);
     return {
@@ -17,9 +24,23 @@ export async function createChallenge(options) {
         signature: await hmacHex(algorithm, challenge, options.hmacKey),
     };
 }
-export async function verifySolution(payload, hmacKey) {
+export function extractParams(payload) {
     if (typeof payload === 'string') {
         payload = JSON.parse(atob(payload));
+    }
+    return Object.fromEntries(new URLSearchParams(payload.salt.split('?')?.[1] || ''));
+}
+export async function verifySolution(payload, hmacKey, checkExpires = true) {
+    if (typeof payload === 'string') {
+        payload = JSON.parse(atob(payload));
+    }
+    const params = extractParams(payload);
+    const expires = params.expires || params.expire;
+    if (checkExpires && expires) {
+        const date = new Date(parseInt(expires, 10) * 1000);
+        if (!isNaN(date.getTime()) && date.getTime() < Date.now()) {
+            return false;
+        }
     }
     const check = await createChallenge({
         algorithm: payload.algorithm,
@@ -64,32 +85,24 @@ export async function verifyServerSignature(payload, hmacKey) {
 }
 export function solveChallenge(challenge, salt, algorithm = 'SHA-256', max = 1e6, start = 0) {
     const controller = new AbortController();
-    const promise = new Promise((resolve, reject) => {
-        const startTime = Date.now();
-        const next = (n) => {
-            if (controller.signal.aborted || n > max) {
-                resolve(null);
+    const startTime = Date.now();
+    const fn = async () => {
+        for (let n = start; n <= max; n += 1) {
+            if (controller.signal.aborted) {
+                return null;
             }
-            else {
-                hashHex(algorithm, salt + n)
-                    .then((t) => {
-                    if (t === challenge) {
-                        resolve({
-                            number: n,
-                            took: Date.now() - startTime,
-                        });
-                    }
-                    else {
-                        next(n + 1);
-                    }
-                })
-                    .catch(reject);
+            const t = await hashHex(algorithm, salt + n);
+            if (t === challenge) {
+                return {
+                    number: n,
+                    took: Date.now() - startTime,
+                };
             }
-        };
-        next(start);
-    });
+        }
+        return null;
+    };
     return {
-        promise,
+        promise: fn(),
         controller,
     };
 }
@@ -144,6 +157,7 @@ export async function solveChallengeWorkers(workerScript, concurrency, challenge
 }
 export default {
     createChallenge,
+    extractParams,
     solveChallenge,
     solveChallengeWorkers,
     verifyServerSignature,

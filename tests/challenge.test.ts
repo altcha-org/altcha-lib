@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createChallenge,
+  extractParams,
   solveChallenge,
   solveChallengeWorkers,
   verifySolution,
@@ -60,12 +61,96 @@ describe('challenge', () => {
       expect(challenge.challenge.length).toEqual(128);
       expect(challenge.signature.length).toEqual(128);
     });
+
+    it('should return a new challenge with expires param', async () => {
+      const expires = new Date(Date.now() + 3600000);
+      const challenge = await createChallenge({
+        algorithm: 'SHA-256',
+        expires,
+        hmacKey,
+      });
+      expect(challenge).toEqual({
+        algorithm: 'SHA-256',
+        challenge: expect.any(String),
+        maxnumber: expect.any(Number),
+        salt: expect.any(String),
+        signature: expect.any(String),
+      } satisfies Challenge);
+      expect(challenge.salt.length).toBeGreaterThan(24);
+      expect(challenge.salt.includes('?expires=')).toBeTruthy();
+      expect(challenge.challenge.length).toEqual(64);
+      expect(challenge.signature.length).toEqual(64);
+    });
+
+    it('should return a new challenge with custom params', async () => {
+      const challenge = await createChallenge({
+        algorithm: 'SHA-256',
+        hmacKey,
+        params: {
+          abc: '123',
+          xyz: '000'
+        },
+      });
+      expect(challenge).toEqual({
+        algorithm: 'SHA-256',
+        challenge: expect.any(String),
+        maxnumber: expect.any(Number),
+        salt: expect.any(String),
+        signature: expect.any(String),
+      } satisfies Challenge);
+      expect(challenge.salt.length).toBeGreaterThan(24);
+      expect(challenge.salt.endsWith('?abc=123&xyz=000')).toBeTruthy();
+      expect(challenge.challenge.length).toEqual(64);
+      expect(challenge.signature.length).toEqual(64);
+    });
+  });
+
+  describe('extractParams', () => {
+    it('should extract custom params from payload', async () => {
+      const number = 100;
+      const challenge = await createChallenge({
+        number,
+        hmacKey,
+        params: {
+          abc: '123',
+          xyz: '000'
+        },
+      });
+      const params = extractParams({
+        ...challenge,
+        number,
+      });
+      expect(params).toEqual({
+        abc: '123',
+        xyz: '000'
+      });
+    });
   });
 
   describe('verifySolution()', () => {
     it('should return true', async () => {
       const number = 100;
       const challenge = await createChallenge({
+        number,
+        hmacKey,
+      });
+      const ok = await verifySolution(
+        {
+          algorithm: challenge.algorithm,
+          challenge: challenge.challenge,
+          number,
+          salt: challenge.salt,
+          signature: challenge.signature,
+        },
+        hmacKey
+      );
+      expect(ok).toEqual(true);
+    });
+
+    it('should return true with expires in the future', async () => {
+      const number = 100;
+      const challenge = await createChallenge({
+        expires: new Date(Date.now() + 3600000),
         number,
         hmacKey,
       });
@@ -166,6 +251,26 @@ describe('challenge', () => {
       const ok = await verifySolution(
         {
           algorithm: 'SHA-1',
+          challenge: challenge.challenge,
+          number,
+          salt: challenge.salt,
+          signature: challenge.signature,
+        },
+        hmacKey
+      );
+      expect(ok).toEqual(false);
+    });
+
+    it('should return false if the challenge expired', async () => {
+      const number = 100;
+      const challenge = await createChallenge({
+        expires: new Date(Date.now() - 3600000),
+        number,
+        hmacKey,
+      });
+      const ok = await verifySolution(
+        {
+          algorithm: challenge.algorithm,
           challenge: challenge.challenge,
           number,
           salt: challenge.salt,

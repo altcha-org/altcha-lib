@@ -4,11 +4,12 @@ ALTCHA JS Library is a lightweight, zero-dependency library designed for creatin
 
 ## Compatibility
 
-This library utilizes [Web Crypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) and is intended for server-side use.
+This library utilizes [Web Crypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto).
 
 - Node.js 16+
 - Bun 1+
 - Deno 1+
+- All modern browsers
 
 ## Usage
 
@@ -37,15 +38,27 @@ Parameters:
 
 - `options: ChallengeOptions`:
   - `algorithm?: string`: Algorithm to use (`SHA-1`, `SHA-256`, `SHA-512`, default: `SHA-256`).
+  - `expires?: Date`: Optional `expires` time (as `Date` set into the future date).
   - `hmacKey: string` (required): Signature HMAC key.
-  - `maxNumber?: number` Optional maximum number for the random number generator (defaults to 1,000,000).
+  - `maxnumber?: number`: Optional maximum number for the random number generator (defaults to 1,000,000).
   - `number?: number`: Optional number to use. If not provided, a random number will be generated.
+  - `params?: Record<string, string>`: Optional parameters to be added to the salt as URL-encoded query string. Use `extractParams()` to read them.
   - `salt?: string`: Optional salt string. If not provided, a random salt will be generated.
-  - `saltLength?: number` Optional maximum lenght of the random salt (in bytes, defaults to 12).
+  - `saltLength?: number`: Optional maximum lenght of the random salt (in bytes, defaults to 12).
 
 Returns: `Promise<Challenge>`
 
-### `verifySolution(payload, hmacKey)`
+### `extractParams(payload)`
+
+Extracts optional parameters from the challenge or payload.
+
+Parameters:
+
+- `payload: string | Payload | Challenge`
+
+Returns: `Record<string, string>`
+
+### `verifySolution(payload, hmacKey, checkExpires = true)`
 
 Verifies an ALTCHA solution. The payload can be a Base64-encoded JSON payload (as submitted by the widget) or an object.
 
@@ -53,6 +66,7 @@ Parameters:
 
 - `payload: string | Payload`
 - `hmacKey: string`
+- `checkExpires: boolean = true`: Whether to perform a check on the optional `expires` parameter. Will return `false` if challenge expired.
 
 Returns: `Promise<boolean>`
 
@@ -65,7 +79,7 @@ Parameters:
 - `challenge: string` (required): The challenge hash.
 - `salt: string` (required): The challenge salt.
 - `algorithm?: string`: Optional algorithm (default: `SHA-256`).
-- `max?: string`: Optional `maxnumber` to iterate to (default: 1e6).
+- `maxnumber?: string`: Optional `maxnumber` to iterate to (default: 1e6).
 - `start?: string`: Optional starting number (default: 0).
 
 Returns: `{ controller: AbortController, promise: Promise<Solution | null> }`
@@ -92,7 +106,7 @@ Parameters:
 - `challenge: string` (required): The challenge hash.
 - `salt: string` (required): The challenge salt.
 - `algorithm?: string`: Optional algorithm (default: `SHA-256`).
-- `max?: string`: Optional `maxnumber` to iterate to (default: 1e6).
+- `maxnumber?: string`: Optional `maxnumber` to iterate to (default: 1e6).
 - `start?: string`: Optional starting number (default: 0).
 
 Returns: `Promise<Solution | null>`
@@ -114,16 +128,18 @@ const solution = await solveChallengeWorkers(
 
 ```
 > solveChallenge()
-- n = 1,000...............................        317 ops/s ±2.63%
-- n = 10,000..............................         32 ops/s ±1.88%
-- n = 100,000.............................          3 ops/s ±0.34%
-- n = 500,000.............................          0 ops/s ±0.32%
+- n = 1,000...............................        312 ops/s ±2.90%
+- n = 10,000..............................         31 ops/s ±1.50%
+- n = 50,000..............................          6 ops/s ±0.82%
+- n = 100,000.............................          3 ops/s ±0.37%
+- n = 500,000.............................          0 ops/s ±0.31%
 
 > solveChallengeWorkers() (8 workers)
-- n = 1,000...............................         66 ops/s ±3.44%
-- n = 10,000..............................         31 ops/s ±4.28%
-- n = 100,000.............................          7 ops/s ±4.40%
-- n = 500,000.............................          1 ops/s ±2.49%
+- n = 1,000...............................         62 ops/s ±3.99%
+- n = 10,000..............................         31 ops/s ±6.83%
+- n = 50,000..............................         11 ops/s ±4.00%
+- n = 100,000.............................          7 ops/s ±2.32%
+- n = 500,000.............................          1 ops/s ±1.89%
 ```
 
 Run with Bun on MacBook Pro M3-Pro. See [/benchmark](/benchmark/) folder for more details.

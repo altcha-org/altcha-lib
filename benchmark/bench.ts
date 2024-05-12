@@ -67,7 +67,7 @@ await benchmark(`solveChallengeWorkers() (${workers} workers)`, (bench) => {
         challenge1.challenge,
         challenge1.salt,
         challenge1.algorithm,
-        challenge1.max,
+        challenge1.maxnumber,
       );
     })
     .add('n = 10,000', async () => {
@@ -77,7 +77,7 @@ await benchmark(`solveChallengeWorkers() (${workers} workers)`, (bench) => {
         challenge2.challenge,
         challenge2.salt,
         challenge2.algorithm,
-        challenge2.max,
+        challenge2.maxnumber,
       );
     })
     .add('n = 50,000', async () => {
@@ -87,7 +87,7 @@ await benchmark(`solveChallengeWorkers() (${workers} workers)`, (bench) => {
         challenge3.challenge,
         challenge3.salt,
         challenge3.algorithm,
-        challenge3.max,
+        challenge3.maxnumber,
       );
     })
     .add('n = 100,000', async () => {
@@ -97,7 +97,7 @@ await benchmark(`solveChallengeWorkers() (${workers} workers)`, (bench) => {
         challenge4.challenge,
         challenge4.salt,
         challenge4.algorithm,
-        challenge4.max,
+        challenge4.maxnumber,
       );
     })
     .add('n = 500,000', async () => {
@@ -107,7 +107,7 @@ await benchmark(`solveChallengeWorkers() (${workers} workers)`, (bench) => {
         challenge5.challenge,
         challenge5.salt,
         challenge5.algorithm,
-        challenge5.max,
+        challenge5.maxnumber,
       );
     });
 });

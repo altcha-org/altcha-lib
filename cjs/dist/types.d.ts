@@ -8,10 +8,12 @@ export interface Challenge {
 }
 export interface ChallengeOptions {
     algorithm?: Algorithm;
+    expires?: Date;
     hmacKey: string;
     maxnumber?: number;
     maxNumber?: number;
     number?: number;
+    params?: Record<string, string>;
     salt?: string;
     saltLength?: number;
 }
