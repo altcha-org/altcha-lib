@@ -1,4 +1,3 @@
-import './crypto.js';
 import type { Algorithm } from './types.js';
 export declare const encoder: TextEncoder;
 export declare function ab2hex(ab: ArrayBuffer | Uint8Array): string;

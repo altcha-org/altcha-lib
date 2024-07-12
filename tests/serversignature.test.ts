@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { verifyServerSignature } from '../lib/index.js';
 import { hash, hmacHex } from '../lib/helpers.js';
 
+if (!('crypto' in globalThis)) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  globalThis.crypto = require('node:crypto').webcrypto;
+}
+
 describe('server signature', () => {
   const hmacKey = 'test key';
 

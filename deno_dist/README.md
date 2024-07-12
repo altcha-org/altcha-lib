@@ -28,6 +28,22 @@ const challenge = await createChallenge({
 const ok = await verifySolution(payload, hmacKey);
 ```
 
+### Usage with Node.js 16
+
+In Node.js version 16, there is no global reference to crypto by default. To use this library, you need to add the following code to your codebase:
+
+```ts
+globalThis.crypto = require('node:crypto').webcrypto;
+```
+
+Or with `import` syntax:
+
+```ts
+import { webcrypto } from 'node:crypto';
+
+globalThis.crypto = webcrypto;
+```
+
 ## API
 
 ### `createChallenge(options)`
