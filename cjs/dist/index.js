@@ -117,12 +117,7 @@ function solveChallenge(challenge, salt, algorithm = 'SHA-256', max = 1e6, start
 exports.solveChallenge = solveChallenge;
 async function solveChallengeWorkers(workerScript, concurrency, challenge, salt, algorithm = 'SHA-256', max = 1e6, startNumber = 0) {
     const workers = [];
-    if (concurrency < 1) {
-        throw new Error('Wrong number of workers configured.');
-    }
-    if (concurrency > 16) {
-        throw new Error('Too many workers. Max. 16 allowed workers.');
-    }
+    concurrency = Math.min(1, Math.max(16, concurrency));
     for (let i = 0; i < concurrency; i++) {
         if (typeof workerScript === 'function') {
             workers.push(workerScript());

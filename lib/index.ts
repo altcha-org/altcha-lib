@@ -163,12 +163,7 @@ export async function solveChallengeWorkers(
   startNumber: number = 0
 ) {
   const workers: Worker[] = [];
-  if (concurrency < 1) {
-    throw new Error('Wrong number of workers configured.');
-  }
-  if (concurrency > 16) {
-    throw new Error('Too many workers. Max. 16 allowed workers.');
-  }
+  concurrency = Math.min(1, Math.max(16, concurrency));
   for (let i = 0; i < concurrency; i++) {
     if (typeof workerScript === 'function') {
       workers.push(workerScript());
