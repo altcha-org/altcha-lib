@@ -8,6 +8,12 @@ if (!('crypto' in globalThis)) {
   globalThis.crypto = require('node:crypto').webcrypto;
 }
 
+if (!('FormData' in globalThis)) {
+  // Node.js 16 doesn't have FormData, mock using URLSearchParams
+  // @ts-expect-error Blob type
+  globalThis.FormData = URLSearchParams;
+}
+
 const formData = new FormData();
 formData.append('field1', 'value1');
 formData.append('field2', 'value2');
