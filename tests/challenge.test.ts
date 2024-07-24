@@ -93,7 +93,7 @@ describe('challenge', () => {
         hmacKey,
         params: {
           abc: '123',
-          xyz: '000'
+          xyz: '000',
         },
       });
       expect(challenge).toEqual({
@@ -118,7 +118,7 @@ describe('challenge', () => {
         hmacKey,
         params: {
           abc: '123',
-          xyz: '000'
+          xyz: '000',
         },
       });
       const params = extractParams({
@@ -127,7 +127,7 @@ describe('challenge', () => {
       });
       expect(params).toEqual({
         abc: '123',
-        xyz: '000'
+        xyz: '000',
       });
     });
   });

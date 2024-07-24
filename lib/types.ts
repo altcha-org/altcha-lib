@@ -1,4 +1,5 @@
 export type Algorithm = 'SHA-1' | 'SHA-256' | 'SHA-512';
+export type Classification = 'BAD' | 'GOOD' | 'NEUTRAL';
 
 export interface Challenge {
   algorithm: Algorithm;
@@ -36,11 +37,14 @@ export interface ServerSignaturePayload {
 }
 
 export interface ServerSignatureVerificationData {
-  classification?: string;
+  classification?: Classification;
+  country?: string;
+  detectedLanguage?: string;
   email?: string;
   expire: number;
   fields?: string[];
   fieldsHash?: string;
+  ipAddress?: string;
   reasons?: string[];
   score?: number;
   time: number;

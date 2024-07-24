@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["DOM"],
+    "lib": ["DOM", "DOM.Iterable"],
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "node",

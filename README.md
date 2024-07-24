@@ -86,6 +86,30 @@ Parameters:
 
 Returns: `Promise<boolean>`
 
+### `verifyServerSignature(payload, hmacKey)`
+
+Verifies the server signature returned by the API. The payload can be a Base64-encoded JSON payload or an object.
+
+Parameters:
+
+- `payload: string | ServerSignaturePayload`
+- `hmacKey: string`
+
+Returns: `Promise<{ verificationData: ServerSignatureVerificationData | null, verified: boolean }>`
+
+### `verifyFieldsHash(formData, fields, fieldsHash, algorithm?)`
+
+Verifies the hash of form fields returned by the Spam Filter.
+
+Parameters:
+
+- `formData: FormData | Record<string, unknown>`
+- `fields: string[]`
+- `fieldsHash: string`
+- `algorithm: Algorithm = 'SHA-256'`
+
+Returns: `Promise<boolean>`
+
 ### `solveChallenge(challenge, salt, algorithm?, max?, start?)`
 
 Finds a solution to the given challenge. 
@@ -99,17 +123,6 @@ Parameters:
 - `start?: string`: Optional starting number (default: 0).
 
 Returns: `{ controller: AbortController, promise: Promise<Solution | null> }`
-
-### `verifyServerSignature(payload, hmacKey)`
-
-Verifies the server signature returned by the API. The payload can be a Base64-encoded JSON payload or an object.
-
-Parameters:
-
-- `payload: string | ServerSignaturePayload`
-- `hmacKey: string`
-
-Returns: `Promise<{ verificationData: ServerSignatureVerificationData | null, verified: boolean }>`
 
 ### `solveChallengeWorkers(workerScript, concurrency, challenge, salt, algorithm?, max?, start?)`
 
