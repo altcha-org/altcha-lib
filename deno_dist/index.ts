@@ -65,7 +65,7 @@ export function extractParams(payload: string | Payload | Challenge) {
     payload = JSON.parse(atob(payload)) as Payload;
   }
   return Object.fromEntries(
-    new URLSearchParams(payload.salt.split('?')?.[1] || '')
+    new URLSearchParams(payload?.salt?.split('?')?.[1] || '')
   );
 }
 

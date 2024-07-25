@@ -45,7 +45,7 @@ function extractParams(payload) {
     if (typeof payload === 'string') {
         payload = JSON.parse(atob(payload));
     }
-    return Object.fromEntries(new URLSearchParams(payload.salt.split('?')?.[1] || ''));
+    return Object.fromEntries(new URLSearchParams(payload?.salt?.split('?')?.[1] || ''));
 }
 exports.extractParams = extractParams;
 /**
