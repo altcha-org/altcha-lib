@@ -1,6 +1,6 @@
 # ALTCHA JS Library
 
-ALTCHA JS Library is a lightweight, zero-dependency library designed for creating and verifying [ALTCHA](https://altcha.org) challenges specifically tailored for Node.js, Bun, and Deno environments.
+ALTCHA JS Library is a lightweight, zero-dependency library designed for creating and verifying [ALTCHA](https://altcha.org) challenges.
 
 ## Compatibility
 
@@ -9,6 +9,7 @@ This library utilizes [Web Crypto](https://developer.mozilla.org/en-US/docs/Web/
 - Node.js 16+
 - Bun 1+
 - Deno 1+
+- WinterCG-compatible runtimes
 - All modern browsers
 
 ## Usage
