@@ -1,6 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.solveChallengeWorkers = exports.solveChallenge = exports.verifyServerSignature = exports.verifyFieldsHash = exports.verifySolution = exports.extractParams = exports.createChallenge = void 0;
+exports.createChallenge = createChallenge;
+exports.extractParams = extractParams;
+exports.verifySolution = verifySolution;
+exports.verifyFieldsHash = verifyFieldsHash;
+exports.verifyServerSignature = verifyServerSignature;
+exports.solveChallenge = solveChallenge;
+exports.solveChallengeWorkers = solveChallengeWorkers;
 const helpers_js_1 = require("./helpers.js");
 const DEFAULT_MAX_NUMBER = 1e6;
 const DEFAULT_SALT_LEN = 12;
@@ -24,7 +30,7 @@ async function createChallenge(options) {
     if (Object.keys(Object.fromEntries(params)).length) {
         salt = salt + '?' + params.toString();
     }
-    const number = options.number === void 0 ? (0, helpers_js_1.randomInt)(maxnumber) : options.number;
+    const number = options.number === undefined ? (0, helpers_js_1.randomInt)(maxnumber) : options.number;
     const challenge = await (0, helpers_js_1.hashHex)(algorithm, salt + number);
     return {
         algorithm,
@@ -34,7 +40,6 @@ async function createChallenge(options) {
         signature: await (0, helpers_js_1.hmacHex)(algorithm, challenge, options.hmacKey),
     };
 }
-exports.createChallenge = createChallenge;
 /**
  * Extracts parameters from the payload.
  *
@@ -47,7 +52,6 @@ function extractParams(payload) {
     }
     return Object.fromEntries(new URLSearchParams(payload?.salt?.split('?')?.[1] || ''));
 }
-exports.extractParams = extractParams;
 /**
  * Verifies the solution provided by the client.
  *
@@ -66,10 +70,13 @@ async function verifySolution(payload, hmacKey, checkExpires = true) {
         }
     }
     const params = extractParams(payload);
-    const expires = params.expires || params.expire;
-    if (checkExpires && expires) {
+    if (checkExpires) {
+        const expires = params.expires || params.expire;
+        if (!expires) {
+            return false;
+        }
         const date = new Date(parseInt(expires, 10) * 1000);
-        if (!isNaN(date.getTime()) && date.getTime() < Date.now()) {
+        if (Number.isNaN(date.getTime()) || date.getTime() < Date.now()) {
             return false;
         }
     }
@@ -82,7 +89,6 @@ async function verifySolution(payload, hmacKey, checkExpires = true) {
     return (check.challenge === payload.challenge &&
         check.signature === payload.signature);
 }
-exports.verifySolution = verifySolution;
 /**
  * Verifies the hash of form fields.
  *
@@ -100,7 +106,6 @@ async function verifyFieldsHash(formData, fields, fieldsHash, algorithm = DEFAUL
     }
     return (await (0, helpers_js_1.hashHex)(algorithm, lines.join('\n'))) === fieldsHash;
 }
-exports.verifyFieldsHash = verifyFieldsHash;
 /**
  * Verifies the server's signature.
  *
@@ -131,7 +136,7 @@ async function verifyServerSignature(payload, hmacKey) {
             reasons: params.get('reasons')?.split(','),
             score: params.get('score')
                 ? parseFloat(params.get('score') || '0')
-                : void 0,
+                : undefined,
             time: parseInt(params.get('time') || '0', 10),
             verified: params.get('verified') === 'true',
         };
@@ -147,7 +152,6 @@ async function verifyServerSignature(payload, hmacKey) {
             payload.signature === signature,
     };
 }
-exports.verifyServerSignature = verifyServerSignature;
 /**
  * Solves a challenge by brute force.
  *
@@ -181,7 +185,6 @@ function solveChallenge(challenge, salt, algorithm = 'SHA-256', max = 1e6, start
         controller,
     };
 }
-exports.solveChallenge = solveChallenge;
 /**
  * Solves a challenge using web workers for parallel computation.
  *
@@ -238,7 +241,6 @@ async function solveChallengeWorkers(workerScript, concurrency, challenge, salt,
     }
     return solutions.find((solution) => !!solution) || null;
 }
-exports.solveChallengeWorkers = solveChallengeWorkers;
 exports.default = {
     createChallenge,
     extractParams,

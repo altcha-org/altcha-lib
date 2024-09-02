@@ -4,9 +4,11 @@ import {
   extractParams,
   solveChallenge,
   solveChallengeWorkers,
+  verifyServerSignature,
   verifySolution,
 } from '../lib/index.js';
 import { Challenge } from '../lib/types.js';
+import { hash, hmacHex } from '../lib/helpers.js';
 
 if (!('crypto' in globalThis)) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -133,7 +135,7 @@ describe('challenge', () => {
   });
 
   describe('verifySolution()', () => {
-    it('should return true', async () => {
+    it('should return true (without expires)', async () => {
       const number = 100;
       const challenge = await createChallenge({
         number,
@@ -147,7 +149,8 @@ describe('challenge', () => {
           salt: challenge.salt,
           signature: challenge.signature,
         },
-        hmacKey
+        hmacKey,
+        false // don't check expires
       );
       expect(ok).toEqual(true);
     });
@@ -284,6 +287,127 @@ describe('challenge', () => {
         hmacKey
       );
       expect(ok).toEqual(false);
+    });
+
+    it('should return false if the challenge does not include expires param but should be checked', async () => {
+      const number = 100;
+      const challenge = await createChallenge({
+        expires: undefined,
+        number,
+        hmacKey,
+      });
+      const ok = await verifySolution(
+        {
+          algorithm: challenge.algorithm,
+          challenge: challenge.challenge,
+          number,
+          salt: challenge.salt,
+          signature: challenge.signature,
+        },
+        hmacKey,
+        true // make sure expires is checked
+      );
+      expect(ok).toEqual(false);
+    });
+
+    it('should return false if the expires is malformated', async () => {
+      const number = 100;
+      const challenge = await createChallenge({
+        number,
+        hmacKey,
+        params: {
+          expires: 'invalid-expires',
+        },
+      });
+      const ok = await verifySolution(
+        {
+          algorithm: challenge.algorithm,
+          challenge: challenge.challenge,
+          number,
+          salt: challenge.salt,
+          signature: challenge.signature,
+        },
+        hmacKey,
+        true // make sure expires is checked
+      );
+      expect(ok).toEqual(false);
+    });
+  });
+
+  describe('verifyServerSignature()', () => {
+    it('should return true if the signature is correct', async () => {
+      const time = Math.floor(Date.now() / 1000);
+      const verificationData = new URLSearchParams({
+        email: 'test@example.net',
+        expire: String(time + 10000),
+        time: String(time),
+        verified: String(true),
+      }).toString();
+      const signature = await hmacHex(
+        'SHA-256',
+        await hash('SHA-256', verificationData),
+        hmacKey
+      );
+      const payload = btoa(
+        JSON.stringify({
+          algorithm: 'SHA-256',
+          signature,
+          verificationData,
+          verified: true,
+        })
+      );
+      const result = await verifyServerSignature(payload, hmacKey);
+      expect(result.verified).toEqual(true);
+    });
+
+    it('should return false if the signature does not match', async () => {
+      const time = Math.floor(Date.now() / 1000);
+      const verificationData = new URLSearchParams({
+        email: 'test@example.net',
+        expire: String(time + 10000),
+        time: String(time),
+        verified: String(true),
+      }).toString();
+      const signature = await hmacHex(
+        'SHA-256',
+        await hash('SHA-256', 'invalid-data'),
+        hmacKey
+      );
+      const payload = btoa(
+        JSON.stringify({
+          algorithm: 'SHA-256',
+          signature,
+          verificationData,
+          verified: true,
+        })
+      );
+      const result = await verifyServerSignature(payload, hmacKey);
+      expect(result.verified).toEqual(false);
+    });
+
+    it('should return false if expired', async () => {
+      const time = Math.floor(Date.now() / 1000);
+      const verificationData = new URLSearchParams({
+        email: 'test@example.net',
+        expire: String(time - 10000), // timestamp in the past
+        time: String(time),
+        verified: String(true),
+      }).toString();
+      const signature = await hmacHex(
+        'SHA-256',
+        await hash('SHA-256', verificationData),
+        hmacKey
+      );
+      const payload = btoa(
+        JSON.stringify({
+          algorithm: 'SHA-256',
+          signature,
+          verificationData,
+          verified: true,
+        })
+      );
+      const result = await verifyServerSignature(payload, hmacKey);
+      expect(result.verified).toEqual(false);
     });
   });
 

@@ -21,7 +21,7 @@ export async function createChallenge(options) {
     if (Object.keys(Object.fromEntries(params)).length) {
         salt = salt + '?' + params.toString();
     }
-    const number = options.number === void 0 ? randomInt(maxnumber) : options.number;
+    const number = options.number === undefined ? randomInt(maxnumber) : options.number;
     const challenge = await hashHex(algorithm, salt + number);
     return {
         algorithm,
@@ -61,10 +61,13 @@ export async function verifySolution(payload, hmacKey, checkExpires = true) {
         }
     }
     const params = extractParams(payload);
-    const expires = params.expires || params.expire;
-    if (checkExpires && expires) {
+    if (checkExpires) {
+        const expires = params.expires || params.expire;
+        if (!expires) {
+            return false;
+        }
         const date = new Date(parseInt(expires, 10) * 1000);
-        if (!isNaN(date.getTime()) && date.getTime() < Date.now()) {
+        if (Number.isNaN(date.getTime()) || date.getTime() < Date.now()) {
             return false;
         }
     }
@@ -124,7 +127,7 @@ export async function verifyServerSignature(payload, hmacKey) {
             reasons: params.get('reasons')?.split(','),
             score: params.get('score')
                 ? parseFloat(params.get('score') || '0')
-                : void 0,
+                : undefined,
             time: parseInt(params.get('time') || '0', 10),
             verified: params.get('verified') === 'true',
         };
