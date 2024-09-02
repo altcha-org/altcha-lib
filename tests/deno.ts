@@ -42,7 +42,8 @@ Deno.test('verifySolution()', async (t) => {
         salt: challenge.salt,
         signature: challenge.signature,
       },
-      hmacKey
+      hmacKey,
+      false // don't check expires
     );
     assertEquals(ok, true);
   });
