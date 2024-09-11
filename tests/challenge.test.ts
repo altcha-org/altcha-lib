@@ -150,7 +150,6 @@ describe('challenge', () => {
           signature: challenge.signature,
         },
         hmacKey,
-        false // don't check expires
       );
       expect(ok).toEqual(true);
     });
@@ -285,27 +284,6 @@ describe('challenge', () => {
           signature: challenge.signature,
         },
         hmacKey
-      );
-      expect(ok).toEqual(false);
-    });
-
-    it('should return false if the challenge does not include expires param but should be checked', async () => {
-      const number = 100;
-      const challenge = await createChallenge({
-        expires: undefined,
-        number,
-        hmacKey,
-      });
-      const ok = await verifySolution(
-        {
-          algorithm: challenge.algorithm,
-          challenge: challenge.challenge,
-          number,
-          salt: challenge.salt,
-          signature: challenge.signature,
-        },
-        hmacKey,
-        true // make sure expires is checked
       );
       expect(ok).toEqual(false);
     });

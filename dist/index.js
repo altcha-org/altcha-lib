@@ -61,11 +61,8 @@ export async function verifySolution(payload, hmacKey, checkExpires = true) {
         }
     }
     const params = extractParams(payload);
-    if (checkExpires) {
-        const expires = params.expires || params.expire;
-        if (!expires) {
-            return false;
-        }
+    const expires = params.expires || params.expire;
+    if (checkExpires && expires) {
         const date = new Date(parseInt(expires, 10) * 1000);
         if (Number.isNaN(date.getTime()) || date.getTime() < Date.now()) {
             return false;
