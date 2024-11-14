@@ -251,7 +251,7 @@ export async function solveChallengeWorkers(
   startNumber: number = 0
 ): Promise<Solution | null> {
   const workers: Worker[] = [];
-  concurrency = Math.min(1, Math.max(16, concurrency));
+  concurrency = Math.max(1, Math.min(16, concurrency));
   for (let i = 0; i < concurrency; i++) {
     if (typeof workerScript === 'function') {
       workers.push(workerScript());

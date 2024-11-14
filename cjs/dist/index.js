@@ -196,7 +196,7 @@ function solveChallenge(challenge, salt, algorithm = 'SHA-256', max = 1e6, start
  */
 async function solveChallengeWorkers(workerScript, concurrency, challenge, salt, algorithm = 'SHA-256', max = 1e6, startNumber = 0) {
     const workers = [];
-    concurrency = Math.min(1, Math.max(16, concurrency));
+    concurrency = Math.max(1, Math.min(16, concurrency));
     for (let i = 0; i < concurrency; i++) {
         if (typeof workerScript === 'function') {
             workers.push(workerScript());
