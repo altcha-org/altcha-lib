@@ -11,7 +11,7 @@ import { Challenge } from '../lib/types.js';
 import { hash, hmacHex } from '../lib/helpers.js';
 
 if (!('crypto' in globalThis)) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
   globalThis.crypto = require('node:crypto').webcrypto;
 }
 
@@ -404,12 +404,48 @@ describe('challenge', () => {
       const result = await promise;
       expect(result?.number).toEqual(number);
     });
+
+    it('should solve challenge with non-default algorithm (SHA-512)', async () => {
+      const number = 100;
+      const challenge = await createChallenge({
+        algorithm: 'SHA-512',
+        number,
+        hmacKey,
+      });
+      const { promise } = solveChallenge(
+        challenge.challenge,
+        challenge.salt,
+        challenge.algorithm
+      );
+      const result = await promise;
+      expect(result?.number).toEqual(number);
+    });
   });
 
   describe.skipIf(!('Worker' in globalThis))('solveChallengeWorkers', () => {
     it('should solve challenge using workers', async () => {
       const number = 100;
       const challenge = await createChallenge({
+        number,
+        hmacKey,
+      });
+      const result = await solveChallengeWorkers(
+        () =>
+          new Worker('./lib/worker.ts', {
+            type: 'module',
+          }),
+        4,
+        challenge.challenge,
+        challenge.salt,
+        challenge.algorithm
+      );
+      expect(result?.number).toEqual(number);
+    });
+
+    it('should solve challenge using workers with non-default algorithm (SHA-512)', async () => {
+      const number = 100;
+      const challenge = await createChallenge({
+        algorithm: 'SHA-512',
         number,
         hmacKey,
       });

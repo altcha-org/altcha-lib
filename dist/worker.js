@@ -7,8 +7,8 @@ onmessage = async (message) => {
         controller = undefined;
     }
     else if (type === 'work') {
-        const { alg, challenge, max, salt, start } = payload || {};
-        const result = solveChallenge(challenge, salt, alg, max, start);
+        const { algorithm, challenge, max, salt, start } = payload || {};
+        const result = solveChallenge(challenge, salt, algorithm, max, start);
         controller = result.controller;
         result.promise.then((solution) => {
             self.postMessage(solution ? { ...solution, worker: true } : solution);
