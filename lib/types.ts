@@ -31,24 +31,31 @@ export interface Payload {
 
 export interface ServerSignaturePayload {
   algorithm: Algorithm;
+  apiKey?: string;
+  id?: string;
   signature: string;
   verificationData: string;
   verified: boolean;
 }
 
 export interface ServerSignatureVerificationData {
+  [key: string]: string | unknown;
   classification?: Classification;
-  country?: string;
-  detectedLanguage?: string;
   email?: string;
   expire: number;
   fields?: string[];
   fieldsHash?: string;
+  id?: string;
   ipAddress?: string;
   reasons?: string[];
   score?: number;
   time: number;
   verified: boolean;
+
+  /** @deprecated With Sentinel, use location.countryCode */
+  country?: string;
+  /** @deprecated With Sentinel, use text.language */
+  detectedLanguage?: string;
 }
 
 export interface Solution {
