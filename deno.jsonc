@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    // Use Deno and DOM libraries
+    "lib": ["deno.ns", "dom", "dom.iterable"],
+
+    // Deno uses ESNext-like behavior by default; no need for target/module
+    "strict": true
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "singleQuote": true,
+    "semiColons": true
+  },
+  "exclude": ["node_modules"],
+  "importMap": "./import_map.json",
+  "tasks": {
+    "test": "deno test --allow-all",
+    "build": "echo 'Build step not needed for Deno unless bundling'"
+  }
+}
