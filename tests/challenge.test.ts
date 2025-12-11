@@ -30,7 +30,7 @@ describe('challenge', () => {
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
-      expect(challenge.salt.length).toEqual(24);
+      expect(challenge.salt.length).toEqual(25);
       expect(challenge.challenge.length).toEqual(64);
       expect(challenge.signature.length).toEqual(64);
     });
@@ -47,7 +47,7 @@ describe('challenge', () => {
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
-      expect(challenge.salt.length).toEqual(24);
+      expect(challenge.salt.length).toEqual(25);
       expect(challenge.challenge.length).toEqual(40);
       expect(challenge.signature.length).toEqual(40);
     });
@@ -64,7 +64,7 @@ describe('challenge', () => {
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
-      expect(challenge.salt.length).toEqual(24);
+      expect(challenge.salt.length).toEqual(25);
       expect(challenge.challenge.length).toEqual(128);
       expect(challenge.signature.length).toEqual(128);
     });
@@ -83,7 +83,7 @@ describe('challenge', () => {
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
-      expect(challenge.salt.length).toBeGreaterThan(24);
+      expect(challenge.salt.length).toBeGreaterThan(25);
       expect(challenge.salt.includes('?expires=')).toBeTruthy();
       expect(challenge.challenge.length).toEqual(64);
       expect(challenge.signature.length).toEqual(64);
@@ -105,8 +105,8 @@ describe('challenge', () => {
         salt: expect.any(String),
         signature: expect.any(String),
       } satisfies Challenge);
-      expect(challenge.salt.length).toBeGreaterThan(24);
-      expect(challenge.salt.endsWith('?abc=123&xyz=000')).toBeTruthy();
+      expect(challenge.salt.length).toBeGreaterThan(25);
+      expect(challenge.salt.endsWith('?abc=123&xyz=000;')).toBeTruthy();
       expect(challenge.challenge.length).toEqual(64);
       expect(challenge.signature.length).toEqual(64);
     });
@@ -309,6 +309,29 @@ describe('challenge', () => {
         true // make sure expires is checked
       );
       expect(ok).toEqual(false);
+    });
+
+    describe('Salt params splicing', () => {
+      it('should not verify manipulated salt with expires parameter', async () => {
+        const number = 123;
+        const challenge = await createChallenge({
+          number,
+          hmacKey,
+          expires: new Date(Date.now() + 600),
+        });
+        const ok = await verifySolution(
+          {
+            algorithm: challenge.algorithm,
+            challenge: challenge.challenge,
+            number: 23,
+            salt: challenge.salt + '1',
+            signature: challenge.signature,
+          },
+          hmacKey,
+          true // make sure expires is checked
+        );
+        expect(ok).toEqual(false);
+      }); 
     });
   });
 

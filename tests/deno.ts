@@ -21,7 +21,7 @@ Deno.test('createChallenge()', async (t) => {
       hmacKey,
     });
     assertEquals(challenge.algorithm, 'SHA-256');
-    assertEquals(challenge.salt.length, 24);
+    assertEquals(challenge.salt.length, 25);
     assertEquals(challenge.challenge.length, 64);
     assertEquals(challenge.signature.length, 64);
   });
