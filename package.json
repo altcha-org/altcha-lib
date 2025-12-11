@@ -61,17 +61,17 @@
     }
   },
   "devDependencies": {
-    "@types/node": "^24.7.1",
-    "@typescript-eslint/eslint-plugin": "^8.4.0",
-    "denoify": "^1.6.13",
-    "eslint": "^8.57.0",
-    "husky": "^9.1.5",
-    "prettier": "^3.3.3",
-    "rimraf": "^5.0.10",
+    "@types/node": "^24.10.3",
+    "@typescript-eslint/eslint-plugin": "^8.49.0",
+    "denoify": "^1.6.17",
+    "eslint": "^8.57.1",
+    "husky": "^9.1.7",
+    "prettier": "^3.7.4",
+    "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",
-    "tsx": "^4.19.0",
-    "typescript": "^5.5.4",
-    "vite": "^7.2.6",
-    "vitest": "^4.0.14"
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7",
+    "vitest": "^4.0.15"
   }
 }

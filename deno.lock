@@ -1,5 +1,5 @@
 {
-  "version": "4",
+  "version": "5",
   "remote": {
     "https://deno.land/std@0.213.0/assert/_constants.ts": "a271e8ef5a573f1df8e822a6eb9d09df064ad66a4390f21b3e31f820a38e0975",
     "https://deno.land/std@0.213.0/assert/_diff.ts": "dcc63d94ca289aec80644030cf88ccbf7acaa6fbd7b0f22add93616b36593840",
@@ -37,17 +37,18 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
-        "npm:@types/node@^20.16.3",
-        "npm:@typescript-eslint/eslint-plugin@^8.4.0",
-        "npm:denoify@^1.6.13",
-        "npm:eslint@^8.57.0",
-        "npm:husky@^9.1.5",
-        "npm:prettier@^3.3.3",
-        "npm:rimraf@^5.0.10",
+        "npm:@types/node@^24.10.3",
+        "npm:@typescript-eslint/eslint-plugin@^8.49.0",
+        "npm:denoify@^1.6.17",
+        "npm:eslint@^8.57.1",
+        "npm:husky@^9.1.7",
+        "npm:prettier@^3.7.4",
+        "npm:rimraf@^6.1.2",
         "npm:ts-node@^10.9.2",
-        "npm:tsx@^4.19.0",
-        "npm:typescript@^5.5.4",
-        "npm:vitest@^3.2.2"
+        "npm:tsx@^4.21.0",
+        "npm:typescript@^5.9.3",
+        "npm:vite@^7.2.7",
+        "npm:vitest@^4.0.15"
       ]
     }
   }
