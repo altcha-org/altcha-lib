@@ -106,7 +106,7 @@ describe('challenge', () => {
         signature: expect.any(String),
       } satisfies Challenge);
       expect(challenge.salt.length).toBeGreaterThan(25);
-      expect(challenge.salt.endsWith('?abc=123&xyz=000;')).toBeTruthy();
+      expect(challenge.salt.endsWith('?abc=123&xyz=000&')).toBeTruthy();
       expect(challenge.challenge.length).toEqual(64);
       expect(challenge.signature.length).toEqual(64);
     });

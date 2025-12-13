@@ -43,8 +43,8 @@ export async function createChallenge(
     salt = salt + '?' + params.toString();
   }
   // Add a delimiter to prevent parameter splicing
-  if (!salt.endsWith(';')) {
-    salt = salt + ';';
+  if (!salt.endsWith('&')) {
+    salt = salt + '&';
   }
   const number =
     options.number === undefined ? randomInt(maxnumber) : options.number;
@@ -69,7 +69,7 @@ export function extractParams(payload: string | Payload | Challenge) {
     payload = JSON.parse(atob(payload)) as Payload;
   }
   return Object.fromEntries(
-    new URLSearchParams(payload?.salt?.split('?')?.[1]?.replace(/;$/, '') || '')
+    new URLSearchParams(payload?.salt?.split('?')?.[1] || '')
   );
 }
 

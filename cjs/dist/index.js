@@ -31,8 +31,8 @@ async function createChallenge(options) {
         salt = salt + '?' + params.toString();
     }
     // Add a delimiter to prevent parameter splicing
-    if (!salt.endsWith(';')) {
-        salt = salt + ';';
+    if (!salt.endsWith('&')) {
+        salt = salt + '&';
     }
     const number = options.number === undefined ? (0, helpers_js_1.randomInt)(maxnumber) : options.number;
     const challenge = await (0, helpers_js_1.hashHex)(algorithm, salt + number);
@@ -54,7 +54,7 @@ function extractParams(payload) {
     if (typeof payload === 'string') {
         payload = JSON.parse(atob(payload));
     }
-    return Object.fromEntries(new URLSearchParams(payload?.salt?.split('?')?.[1]?.replace(/;$/, '') || ''));
+    return Object.fromEntries(new URLSearchParams(payload?.salt?.split('?')?.[1] || ''));
 }
 /**
  * Verifies the solution provided by the client.
