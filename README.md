@@ -2,6 +2,12 @@
 
 ALTCHA JS Library is a lightweight, zero-dependency library designed for creating and verifying [ALTCHA](https://altcha.org) challenges.
 
+> [!TIP]
+> A new version of the library with the updated PoW mechanism is available on the `beta` release channel.
+> 
+> Documentation: https://github.com/altcha-org/altcha-lib/tree/v2  
+> Install it with: `npm install altcha-lib@beta`
+
 ## Compatibility
 
 This library utilizes [Web Crypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto).
