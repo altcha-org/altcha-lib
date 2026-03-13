@@ -88,8 +88,7 @@ app.post('/altcha/verify', altcha.verifyHandler);
 ```ts
 // Apply ALTCHA middleware for automatic verification
 app
-  .use(altcha.middleware())
-  .post('/submit', async (c) => {
+  .post('/submit', altcha.middleware(), async (c) => {
     const body = await c.req.parseBody();
 
     return c.json({
