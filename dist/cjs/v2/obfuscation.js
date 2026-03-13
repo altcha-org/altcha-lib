@@ -6,7 +6,7 @@ const pbkdf2_js_1 = require("./algorithms/pbkdf2.js");
 const pow_js_1 = require("./pow.js");
 const helpers_js_1 = require("./helpers.js");
 async function deobfuscate(obfuscatedData, options = {}) {
-    const { concurrency = navigator.hardwareConcurrency, createWorker, deriveKey = pbkdf2_js_1.deriveKey, } = options;
+    const { concurrency = Math.max(1, Math.min(4, typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : 1)), createWorker, deriveKey = pbkdf2_js_1.deriveKey, } = options;
     let challenge = null;
     try {
         challenge = JSON.parse(atob(obfuscatedData));

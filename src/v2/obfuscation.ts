@@ -29,7 +29,13 @@ export async function deobfuscate(
 	} = {}
 ) {
 	const {
-		concurrency = navigator.hardwareConcurrency,
+		concurrency = Math.max(
+			1,
+			Math.min(
+				4,
+				typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : 1
+			)
+		),
 		createWorker,
 		deriveKey = derivedKeyPBKDF2,
 	} = options;

@@ -2,7 +2,7 @@ import { deriveKey as derivedKeyPBKDF2 } from './algorithms/pbkdf2.js';
 import { createChallenge, solveChallenge, solveChallengeWorkers, } from './pow.js';
 import { bufferToHex, hexToBuffer } from './helpers.js';
 export async function deobfuscate(obfuscatedData, options = {}) {
-    const { concurrency = navigator.hardwareConcurrency, createWorker, deriveKey = derivedKeyPBKDF2, } = options;
+    const { concurrency = Math.max(1, Math.min(4, typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : 1)), createWorker, deriveKey = derivedKeyPBKDF2, } = options;
     let challenge = null;
     try {
         challenge = JSON.parse(atob(obfuscatedData));
