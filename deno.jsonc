@@ -19,7 +19,6 @@
     "semiColons": true
   },
   "exclude": ["node_modules"],
-  "importMap": "./import_map.json",
   "tasks": {
     "test": "deno test --allow-all",
     "build": "echo 'Build step not needed for Deno unless bundling'"

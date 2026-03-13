@@ -12,17 +12,13 @@ We appreciate your contributions! To ensure a smooth and transparent collaborati
 
 ALTCHA is hosted on GitHub, where you can find the codebase, track issues, and submit pull requests. Please familiarize yourself with GitHub for effective collaboration.
 
-## Project Technology: Svelte
-
-ALTCHA utilizes [Svelte](https://svelte.dev) for its Web Component widget. Refer to Svelte's documentation to set up your development environment.
-
 ## Licensing Information
 
 Any contributions you make will be subjected to the project's MIT software license. By submitting code changes, you agree to license your contributions under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the entire project. If you have any concerns regarding licensing, feel free to reach out to the maintainers.
 
-## Reporting Bugs Using GitHub's [Issues](https://github.com/altcha-org/altcha/issues)
+## Reporting Bugs Using GitHub's [Issues](https://github.com/altcha-org/altcha-lib/issues)
 
-We track public bugs using GitHub issues. Reporting a bug is easy: simply [open a new issue](https://github.com/altcha-org/altcha/issues). Provide detailed information for effective bug resolution.
+We track public bugs using GitHub issues. Reporting a bug is easy: simply [open a new issue](https://github.com/altcha-org/altcha-lib/issues). Provide detailed information for effective bug resolution.
 
 ## Writing Effective Bug Reports
 

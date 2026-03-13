@@ -1,8 +1,9 @@
 {
     "extends": "./tsconfig.build.json",
     "compilerOptions": {
-      "outDir": "./cjs/dist",
+      "outDir": "./dist/cjs",
       "module": "commonjs",
+      "moduleResolution": "node",
       "target": "ES2021"
     }
   }

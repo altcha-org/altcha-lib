@@ -1,7 +1,7 @@
 {
   "name": "altcha-lib",
-  "version": "1.4.1",
-  "description": "A library for creating and verifying ALTCHA challenges for Node.js, Bun and Deno.",
+  "version": "2.0.0-beta.1",
+  "description": "A lightweight library for creating and verifying ALTCHA challenges on the server.",
   "author": {
     "name": "Daniel Regeci",
     "url": "https://altcha.org"
@@ -23,55 +23,166 @@
   "types": "./dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "rimraf dist && rimraf cjs/dist && tsc -b tsconfig.build.json tsconfig.cjs.json",
-    "denoify": "rimraf deno_dist && denoify && find deno_dist/. -type f -exec sed -i '' -e 's/node:node:/node:/g' {} +",
-    "eslint": "eslint ./lib/**/*",
-    "format": "prettier --write './(lib|tests)/**/*'",
+    "build": "rimraf dist && tsc -b tsconfig.build.json tsconfig.cjs.json",
+    "lint": "eslint ./src/**/*",
+    "format": "prettier --write './(src|tests)/**/*'",
     "test": "vitest --run",
-    "test:deno": "deno test --allow-read tests/deno.ts",
     "prepare": "husky"
   },
   "files": [
-    "cjs",
     "dist"
   ],
+  "bin": {
+    "altcha-lib": "./bin/cli.mjs"
+  },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./cjs/dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/esm/v2/index.d.ts",
+      "import": "./dist/esm/v2/index.js",
+      "require": "./dist/cjs/v2/index.js",
+      "default": "./dist/esm/v2/index.js"
+    },
+    "./algorithms/*": {
+      "types": "./dist/esm/v2/algorithms/*.d.ts",
+      "import": "./dist/esm/v2/algorithms/*.js",
+      "require": "./dist/cjs/v2/algorithms/*.js"
+    },
+    "./frameworks/*": {
+      "types": "./dist/esm/v2/frameworks/*.d.ts",
+      "import": "./dist/esm/v2/frameworks/*.js",
+      "require": "./dist/cjs/v2/frameworks/*.js"
+    },
+    "./obfuscation": {
+      "types": "./dist/esm/v2/obfuscation.d.ts",
+      "import": "./dist/esm/v2/obfuscation.js",
+      "require": "./dist/cjs/v2/obfuscation.js"
+    },
+    "./workers/*": {
+      "types": "./dist/esm/v2/workers/*.d.ts",
+      "import": "./dist/esm/v2/workers/*.js",
+      "require": "./dist/cjs/v2/workers/*.js"
     },
     "./types": {
-      "types": "./dist/types.d.ts",
-      "import": "./dist/types.js"
+      "types": "./dist/esm/v2/types.d.ts",
+      "import": "./dist/esm/v2/types.js"
     },
-    "./worker": {
-      "types": "./dist/worker.d.ts",
-      "import": "./dist/worker.js",
-      "require": "./cjs/dist/worker.js",
-      "default": "./dist/worker.js"
+    "./v1": {
+      "types": "./dist/esm/v1/index.d.ts",
+      "import": "./dist/esm/v1/index.js",
+      "require": "./dist/cjs/v1/index.js",
+      "default": "./dist/esm/v1/index.js"
+    },
+    "./v1/types": {
+      "types": "./dist/esm/v1/types.d.ts",
+      "import": "./dist/esm/v1/types.js"
+    },
+    "./v1/worker": {
+      "types": "./dist/esm/v1/worker.d.ts",
+      "import": "./dist/esm/v1/worker.js",
+      "require": "./dist/cjs/v1/worker.js",
+      "default": "./dist/esm/v1/worker.js"
     }
   },
   "typesVersions": {
     "*": {
       "types": [
-        "./dist/types"
+        "./dist/esm/v2/types"
       ]
     }
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.2.0",
+    "@fastify/formbody": "^8.0.2",
+    "@nestjs/common": "^11.1.16",
+    "@nestjs/core": "^11.1.16",
+    "@nestjs/platform-express": "^11.1.16",
+    "@sveltejs/kit": "^2.54.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^24.10.3",
+    "@types/supertest": "^7.2.0",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
-    "denoify": "^1.6.17",
-    "eslint": "^8.57.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "eslint": "^10.0.3",
+    "express": "^5.2.1",
+    "fastify": "^5.8.2",
+    "globals": "^17.4.0",
+    "h3": "2.0.1-rc.16",
+    "hono": "^4.12.5",
     "husky": "^9.1.7",
-    "prettier": "^3.7.4",
-    "rimraf": "^6.1.2",
+    "prettier": "^3.8.1",
+    "rimraf": "^6.1.3",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vite": "^7.2.7",
-    "vitest": "^4.0.15"
+    "vite": "^8.0.0",
+    "vitest": "^4.1.0",
+    "web-worker": "^1.5.0"
+  },
+  "peerDependencies": {
+    "@fastify/cookie": "^11.0.0",
+    "@fastify/cors": "^11.0.0",
+    "@fastify/formbody": "^8.0.0",
+    "@nestjs/common": "^10.0.0 || ^11.0.0",
+    "@nestjs/core": "^10.0.0 || ^11.0.0",
+    "@nestjs/platform-express": "^10.0.0 || ^11.0.0",
+    "@sveltejs/kit": "^2.0.0",
+    "cookie-parser": "^1.0.0",
+    "cors": "^2.0.0",
+    "express": "^4.0.0 || ^5.0.0",
+    "fastify": "^5.0.0",
+    "h3": "^2.0.0",
+    "hono": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/common": {
+      "optional": true
+    },
+    "@nestjs/core": {
+      "optional": true
+    },
+    "@nestjs/platform-express": {
+      "optional": true
+    },
+    "@fastify/cookie": {
+      "optional": true
+    },
+    "@fastify/cors": {
+      "optional": true
+    },
+    "@fastify/formbody": {
+      "optional": true
+    },
+    "@sveltejs/kit": {
+      "optional": true
+    },
+    "cookie-parser": {
+      "optional": true
+    },
+    "cors": {
+      "optional": true
+    },
+    "express": {
+      "optional": true
+    },
+    "fastify": {
+      "optional": true
+    },
+    "h3": {
+      "optional": true
+    },
+    "hono": {
+      "optional": true
+    }
+  },
+  "overrides": {
+    "cookie": "^1.1.1",
+    "file-type": "^21.3.1"
   }
 }

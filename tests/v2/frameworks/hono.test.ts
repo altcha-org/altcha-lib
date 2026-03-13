@@ -1,0 +1,176 @@
+import { describe, expect, test } from 'vitest';
+import { Hono } from 'hono';
+import { create } from '../../../src/v2/frameworks/hono.js';
+import { deriveKey } from '../../../src/v2/algorithms/pbkdf2.js';
+import { createChallenge, solveChallenge } from '../../../src/v2/pow.js';
+
+describe('Hono', () => {
+	const hmacSignatureSecret = 'secret.key';
+
+	describe('create()', () => {
+		test('should return an object with app and middleware', () => {
+			const result = create({
+				createChallengeParameters() {
+					return {
+						algorithm: 'PBKDF2/SHA-256',
+						cost: 10,
+						counter: 10,
+					};
+				},
+				deriveKey,
+				hmacSignatureSecret,
+			});
+			expect(result.challengeHandler).toBeTypeOf('function');
+			expect(result.verifyHandler).toBeTypeOf('function');
+			expect(result.middleware).toBeTypeOf('function');
+			expect(result.verify).toBeTypeOf('function');
+		});
+	});
+
+	describe('handlers', () => {
+		const altcha = create({
+			createChallengeParameters() {
+				return {
+					algorithm: 'PBKDF2/SHA-256',
+					cost: 10,
+					counter: 10,
+				};
+			},
+			deriveKey,
+			hmacSignatureSecret,
+		});
+
+		async function createPayload(
+			options?: Partial<Parameters<typeof createChallenge>[0]>
+		) {
+			const challenge = await createChallenge({
+				algorithm: 'PBKDF2/SHA-256',
+				cost: 10,
+				counter: 10,
+				deriveKey,
+				hmacSignatureSecret,
+				...options,
+			});
+			const solution = await solveChallenge({
+				challenge,
+				deriveKey,
+			});
+			const payload = btoa(
+				JSON.stringify({
+					challenge,
+					solution,
+				})
+			);
+			return {
+				challenge,
+				payload,
+				solution,
+			};
+		}
+
+		describe('routes', () => {
+			describe('/challenge', () => {
+				test('should return a new challenge', async () => {
+					const app = new Hono();
+					app.get('/challenge', altcha.challengeHandler);
+					const resp = await app.request('/challenge');
+					const json = await resp.json();
+					expect(json.parameters).toBeDefined();
+					expect(json.parameters.algorithm).toBeDefined();
+					expect(json.parameters.cost).toBeDefined();
+					expect(json.parameters.nonce).toBeDefined();
+					expect(json.parameters.salt).toBeDefined();
+					expect(json.signature).toBeDefined();
+				});
+			});
+
+			describe('/verify', () => {
+				test('should verify the payload and return the result', async () => {
+					const { challenge, payload, solution } = await createPayload();
+					const app = new Hono();
+					app.post('/verify', altcha.verifyHandler);
+					const resp = await app.request('/verify', {
+						body: JSON.stringify({
+							altcha: payload,
+						}),
+						headers: {
+							'content-type': 'application/json',
+						},
+						method: 'POST',
+					});
+					const json = await resp.json();
+					expect(json).toEqual({
+						error: null,
+						payload: {
+							challenge,
+							solution,
+						},
+						verification: {
+							expired: false,
+							invalidSignature: false,
+							invalidSolution: false,
+							time: expect.any(Number),
+							verified: true,
+						},
+					});
+				});
+			});
+		});
+
+		describe('middleware', () => {
+			function createApp() {
+				const app = new Hono();
+				app.use(altcha.middleware()).post('/submit', (c) => {
+					return c.json({
+						success: true,
+					});
+				});
+				return app;
+			}
+
+			test('should pass with a valid payload', async () => {
+				const app = createApp();
+				const { payload } = await createPayload();
+				const body = new FormData();
+				body.set('test', 'test');
+				body.set('altcha', payload);
+				const resp = await app.request('/submit', {
+					body,
+					method: 'POST',
+				});
+				const json = await resp.json();
+				expect(json).toEqual({
+					success: true,
+				});
+			});
+
+			test('should throw error if challenge expired', async () => {
+				const app = createApp();
+				const { payload } = await createPayload({
+					expiresAt: new Date(Date.now() - 1_000),
+				});
+				const body = new FormData();
+				body.set('test', 'test');
+				body.set('altcha', payload);
+				const resp = await app.request('/submit', {
+					body,
+					method: 'POST',
+				});
+				const text = await resp.text();
+				expect(text.includes('ALTCHA verification failed')).toBeTruthy();
+			});
+
+			test('should throw error if payload is missing', async () => {
+				const app = createApp();
+				const body = new FormData();
+				body.set('test', 'test');
+				const resp = await app.request('/submit', {
+					body,
+					method: 'POST',
+				});
+				const text = await resp.text();
+				expect(text.includes('ALTCHA payload is missing')).toBeTruthy();
+			});
+		});
+	});
+});
