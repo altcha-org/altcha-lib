@@ -30,6 +30,7 @@
     "prepare": "husky"
   },
   "files": [
+    "bin",
     "dist"
   ],
   "bin": {
