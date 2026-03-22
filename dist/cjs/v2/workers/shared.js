@@ -6,7 +6,7 @@ function handler(options) {
     const { deriveKey } = options;
     let controller = undefined;
     self.onmessage = async (message) => {
-        const { challenge, counterMode, counterStart, counterStep, type } = message.data;
+        const { challenge, counterMode, counterStart, counterStep, timeout, type } = message.data;
         if (type === 'abort') {
             controller?.abort();
         }
@@ -21,6 +21,7 @@ function handler(options) {
                     counterStep,
                     deriveKey,
                     counterMode,
+                    timeout,
                 });
             }
             catch (err) {

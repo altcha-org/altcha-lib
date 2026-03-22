@@ -7,7 +7,7 @@ export function handler(options: { deriveKey: DeriveKeyFunction }) {
 	let controller: AbortController | undefined = undefined;
 
 	self.onmessage = async (message) => {
-		const { challenge, counterMode, counterStart, counterStep, type } =
+		const { challenge, counterMode, counterStart, counterStep, timeout, type } =
 			message.data;
 		if (type === 'abort') {
 			controller?.abort();
@@ -22,6 +22,7 @@ export function handler(options: { deriveKey: DeriveKeyFunction }) {
 					counterStep,
 					deriveKey,
 					counterMode,
+					timeout,
 				});
 			} catch (err) {
 				return self.postMessage({ error: err });

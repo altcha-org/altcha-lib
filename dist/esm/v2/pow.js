@@ -119,7 +119,7 @@ export async function solveChallenge(options) {
  * Automatically retries with fewer workers on out-of-memory errors.
  */
 export async function solveChallengeWorkers(options) {
-    const { challenge, concurrency = navigator.hardwareConcurrency, controller = new AbortController(), createWorker, onOutOfMemory = (c) => (c > 1 ? Math.floor(c / 2) : 0), counterMode, } = options;
+    const { challenge, concurrency = navigator.hardwareConcurrency, controller = new AbortController(), createWorker, onOutOfMemory = (c) => (c > 1 ? Math.floor(c / 2) : 0), counterMode, timeout, } = options;
     const workersConcurrency = Math.min(16, Math.max(1, concurrency));
     const workersInstances = [];
     const terminate = () => {
@@ -161,6 +161,7 @@ export async function solveChallengeWorkers(options) {
                     counterMode,
                     counterStart: i,
                     counterStep: workersConcurrency,
+                    timeout,
                     type: 'work',
                 });
             });
