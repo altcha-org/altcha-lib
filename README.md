@@ -20,6 +20,7 @@ If your framework is not listed, see the [Advanced Usage](/docs/advanced-usage.m
 
 - Advanced Usage: [`/docs/advanced-usage.md`](/docs/advanced-usage.md)
 - Algorithms: [`/docs/algorithms.md`](/docs/algorithms.md)
+- CLI Usage: [`/docs/cli.md`](/docs/cli.md)
 - Configuration Options: [`/docs/configuration-options.md`](/docs/configuration-options.md)
 - Obfuscation: [`/docs/obfuscation.md`](/docs/obfuscation.md)
 - Store: [`/docs/store.md`](/docs/store.md)
