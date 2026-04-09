@@ -84,17 +84,18 @@ export async function solveChallenge(options) {
     const password = new PasswordBuffer(nonceBuf, counterMode);
     const start = performance.now();
     let counter = counterStart;
+    let iterations = 0;
     let derivedKeyHex = '';
     let lastYield = start;
     while (true) {
         // Check for abort signal or timeout every 10 iterations.
         if (controller?.signal.aborted ||
-            (timeout && counter % 10 === 0 && performance.now() - start > timeout)) {
+            (timeout && iterations % 10 === 0 && performance.now() - start > timeout)) {
             return null;
         }
         const { derivedKey } = await deriveKey(challenge.parameters, saltBuf, password.setCounter(counter));
         // Yield to the event loop periodically.
-        if (counter % 10 === 0 && performance.now() - lastYield > 200) {
+        if (iterations % 10 === 0 && performance.now() - lastYield > 200) {
             await delay(0);
             lastYield = performance.now();
         }
@@ -106,6 +107,7 @@ export async function solveChallenge(options) {
             break;
         }
         counter = counter + counterStep;
+        iterations = iterations + 1;
     }
     return {
         counter,
