@@ -16,4 +16,4 @@ jobs:
           node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
       - run: npm install
-      - run: npm publish --provenance --access public --tag beta
+      - run: npm publish --provenance --access public
