@@ -23,7 +23,7 @@
   "types": "./dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "rimraf dist && tsc -b tsconfig.build.json tsconfig.cjs.json",
+    "build": "rimraf dist && tsc -b tsconfig.build.json tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "lint": "eslint ./src/**/*",
     "format": "prettier --write './(src|tests)/**/*'",
     "test": "vitest --run",
