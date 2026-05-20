@@ -122,7 +122,7 @@ export function create(options: AltchaOptions) {
 				deleteCookie(reply, setCookie.name, setCookie.path);
 			}
 			if (error && throwOnFailure) {
-				return reply.code(403).send({ error });
+				throw Object.assign(new Error(error), { statusCode: 403 });
 			}
 		};
 	};

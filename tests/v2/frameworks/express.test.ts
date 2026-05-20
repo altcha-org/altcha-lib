@@ -150,15 +150,13 @@ describe('Express', () => {
 				const res = await request(app)
 					.post('/submit')
 					.send(`altcha=${encodeURIComponent(payload)}`);
-				const json = res.body;
-				expect(json.error.includes('ALTCHA verification failed')).toBeTruthy();
+				expect(res.text.includes('ALTCHA verification failed')).toBeTruthy();
 			});
 
 			test('should throw error if payload is missing', async () => {
 				const app = createApp();
 				const res = await request(app).post('/submit').send(`test=test`);
-				const json = res.body;
-				expect(json.error.includes('ALTCHA payload is missing')).toBeTruthy();
+				expect(res.text.includes('ALTCHA payload is missing')).toBeTruthy();
 			});
 		});
 	});
