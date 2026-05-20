@@ -55,8 +55,7 @@ function create(options) {
                 res.clearCookie(setCookie.name);
             }
             if (error && throwOnFailure) {
-                res.status(403).json({ error });
-                return;
+                throw Object.assign(new Error(error), { status: 403 });
             }
             next();
         });

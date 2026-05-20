@@ -14,7 +14,7 @@ export declare function create(options: AltchaOptions): {
     challengeHandler: (request: FastifyRequest, reply: FastifyReply) => Promise<never>;
     verifyHandler: (request: FastifyRequest, reply: FastifyReply) => Promise<never>;
     getPayloadFromRequest: (request: FastifyRequest, cookieName?: string) => Promise<string | undefined>;
-    middleware: (options?: AltchaMiddlewareOptions) => (request: FastifyRequest, reply: FastifyReply) => Promise<undefined>;
+    middleware: (options?: AltchaMiddlewareOptions) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     verify: typeof verify;
 };
 declare const _default: {
