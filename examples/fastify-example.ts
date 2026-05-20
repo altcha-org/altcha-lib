@@ -30,10 +30,10 @@ const altcha = create({
 	deriveKey,
 
 	// Instead of sending the payload in the form data, use cookie instead
-	setCookie: {
-		name: 'altcha',
-		path: '/',
-	},
+	// setCookie: {
+	// 	name: 'altcha',
+	// 	path: '/',
+	// },
 
 	// For distributed environments, use Redis or similar to store used challenges
 	store: new CappedMap<string, boolean>({
@@ -63,12 +63,6 @@ app.post(
 		});
 	}
 );
-
-// Global error handler
-app.setErrorHandler((error, request, reply) => {
-	request.log.error(error);
-	reply.code(500).send('Internal Server Error.');
-});
 
 // Start the fastify server
 await app.listen({

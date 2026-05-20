@@ -75,10 +75,10 @@ class SubmitController {
 					expiresAt: new Date(Date.now() + 600_000), // 10 minutes
 				}),
 				deriveKey,
-				setCookie: {
-					name: 'altcha',
-					path: '/',
-				},
+				// setCookie: {
+				// 	name: 'altcha',
+				// 	path: '/',
+				// },
 				store: new CappedMap<string, boolean>({
 					maxSize: 1_000,
 				}),

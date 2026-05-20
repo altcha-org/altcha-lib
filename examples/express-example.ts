@@ -1,7 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { CappedMap, create, deriveHmacKeySecret, randomInt } from 'altcha-lib/frameworks/express';
+import {
+	CappedMap,
+	create,
+	deriveHmacKeySecret,
+	randomInt,
+} from 'altcha-lib/frameworks/express';
 import { deriveKey } from 'altcha-lib/algorithms/pbkdf2';
 
 // Define your HMAC secret
@@ -30,10 +35,10 @@ const altcha = create({
 	deriveKey,
 
 	// Instead of sending the payload in the form data, use cookie instead
-	setCookie: {
-		name: 'altcha',
-		path: '/',
-	},
+	// setCookie: {
+	// 	name: 'altcha',
+	// 	path: '/',
+	// },
 
 	// For distributed environments, use Redis or similar to store used challenges
 	store: new CappedMap<string, boolean>({
@@ -59,20 +64,6 @@ app.post('/submit', altcha.middleware(), (req, res) => {
 		body: req.body,
 	});
 });
-
-// Global error handler
-app.use(
-	(
-		err: Error,
-		req: express.Request,
-		res: express.Response,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		next: express.NextFunction
-	) => {
-		console.error(err);
-		res.status(500).send('Internal Server Error.');
-	}
-);
 
 // Start the express server
 app.listen(PORT, () => {

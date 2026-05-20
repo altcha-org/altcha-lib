@@ -24,10 +24,10 @@ const altcha = create({
 	// The key derivation function for the chosen algorithm
 	deriveKey,
 	// Instead of sending the payload in the form data, use cookie instead
-	setCookie: {
-		name: 'altcha',
-		path: '/',
-	},
+	// setCookie: {
+	// 	name: 'altcha',
+	// 	path: '/',
+	// },
 	// For distributed environments, use Redis or similar to store used challenges
 	store: new CappedMap<string, boolean>({
 		maxSize: 1_000,
