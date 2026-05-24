@@ -35,6 +35,7 @@ export function create(options: AltchaOptions) {
 	const challengeHandler = async <E extends Env, P extends string>(
 		c: Context<E, P>
 	) => {
+		c.header('Cache-Control', 'no-store');
 		return c.json({
 			configuration: setCookie
 				? {

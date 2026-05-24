@@ -4,6 +4,7 @@ import {
 	getCookie,
 	deleteCookie,
 	readBody,
+	setResponseHeader,
 } from 'h3';
 import { createChallenge } from '../pow.js';
 import { randomInt } from '../helpers.js';
@@ -36,7 +37,8 @@ export function create(options: AltchaOptions) {
 		store,
 	} = options;
 
-	const challengeHandler = defineEventHandler(async () => {
+	const challengeHandler = defineEventHandler(async (event) => {
+		setResponseHeader(event, 'Cache-Control', 'no-store');
 		return {
 			configuration: setCookie
 				? {

@@ -4,6 +4,7 @@ import {
 	Get,
 	Post,
 	Req,
+	Header,
 	Injectable,
 	NestMiddleware,
 	DynamicModule,
@@ -148,6 +149,7 @@ export class AltchaController {
 	constructor(private readonly altchaService: AltchaService) {}
 
 	@Get('challenge')
+	@Header('Cache-Control', 'no-store')
 	async getChallenge() {
 		return this.altchaService.getChallenge();
 	}

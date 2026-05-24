@@ -65,14 +65,17 @@ export function create(options: AltchaOptions) {
 			...createChallengeParameters(),
 		});
 
-		return json({
-			configuration: setCookie
-				? {
-						setCookie,
-					}
-				: undefined,
-			...challenge,
-		});
+		return json(
+			{
+				configuration: setCookie
+					? {
+							setCookie,
+						}
+					: undefined,
+				...challenge,
+			},
+			{ headers: { 'Cache-Control': 'no-store' } }
+		);
 	}
 
 	async function verifyHandler(event: RequestEvent) {

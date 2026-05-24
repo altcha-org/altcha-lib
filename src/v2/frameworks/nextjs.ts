@@ -52,7 +52,9 @@ export function create(options: AltchaOptions) {
 				: undefined,
 			...challenge,
 		};
-		const response = Response.json(body);
+		const response = Response.json(body, {
+			headers: { 'Cache-Control': 'no-store' },
+		});
 		return response;
 	}
 
