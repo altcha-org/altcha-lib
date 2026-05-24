@@ -11,7 +11,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var AltchaModule_1;
-import { Module, Controller, Get, Post, Req, Injectable, Inject, HttpException, HttpStatus, createParamDecorator, } from '@nestjs/common';
+import { Module, Controller, Get, Post, Req, Header, Injectable, Inject, HttpException, HttpStatus, createParamDecorator, } from '@nestjs/common';
 import { randomInt } from '../helpers.js';
 import { createChallenge } from '../pow.js';
 import { deriveHmacKeySecret, verify } from './shared.js';
@@ -118,6 +118,7 @@ let AltchaController = class AltchaController {
 };
 __decorate([
     Get('challenge'),
+    Header('Cache-Control', 'no-store'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

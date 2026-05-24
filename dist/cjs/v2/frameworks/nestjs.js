@@ -116,6 +116,7 @@ let AltchaController = class AltchaController {
 exports.AltchaController = AltchaController;
 __decorate([
     (0, common_1.Get)('challenge'),
+    (0, common_1.Header)('Cache-Control', 'no-store'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

@@ -9,7 +9,6 @@ exports.constantTimeEqual = constantTimeEqual;
 exports.delay = delay;
 exports.hash = hash;
 exports.hmac = hmac;
-exports.injectCss = injectCss;
 exports.randomInt = randomInt;
 exports.sortKeys = sortKeys;
 exports.timeDuration = timeDuration;
@@ -87,17 +86,6 @@ async function hmac(algorithm, data, keyStr) {
         ? new TextEncoder().encode(data)
         : data);
     return new Uint8Array(signature);
-}
-/** Inject CSS tag into the document */
-function injectCss(css, id = 'altcha-css') {
-    if (typeof document !== 'undefined' &&
-        document &&
-        !document.getElementById(id)) {
-        const style = document.createElement('style');
-        style.id = id;
-        style.textContent = css;
-        document.head.appendChild(style);
-    }
 }
 /** Generates a random integer between the specified minimum and maximum values (inclusive). */
 function randomInt(max, min = 1) {

@@ -21,7 +21,7 @@ function create(options) {
             hmacKeySignatureSecret,
             ...createChallengeParameters(),
         });
-        res.json({
+        res.set('Cache-Control', 'no-store').json({
             configuration: setCookie
                 ? {
                     setCookie,

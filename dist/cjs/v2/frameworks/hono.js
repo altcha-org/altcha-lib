@@ -14,6 +14,7 @@ Object.defineProperty(exports, "deriveHmacKeySecret", { enumerable: true, get: f
 function create(options) {
     const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, } = options;
     const challengeHandler = async (c) => {
+        c.header('Cache-Control', 'no-store');
         return c.json({
             configuration: setCookie
                 ? {

@@ -8,6 +8,7 @@ export { CappedMap, deriveHmacKeySecret, randomInt };
 export function create(options) {
     const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, } = options;
     const challengeHandler = async (c) => {
+        c.header('Cache-Control', 'no-store');
         return c.json({
             configuration: setCookie
                 ? {

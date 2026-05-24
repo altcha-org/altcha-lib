@@ -12,7 +12,8 @@ const shared_js_1 = require("./shared.js");
 Object.defineProperty(exports, "deriveHmacKeySecret", { enumerable: true, get: function () { return shared_js_1.deriveHmacKeySecret; } });
 function create(options) {
     const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, } = options;
-    const challengeHandler = (0, h3_1.defineEventHandler)(async () => {
+    const challengeHandler = (0, h3_1.defineEventHandler)(async (event) => {
+        (0, h3_1.setResponseHeader)(event, 'Cache-Control', 'no-store');
         return {
             configuration: setCookie
                 ? {

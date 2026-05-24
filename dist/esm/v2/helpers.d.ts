@@ -17,8 +17,6 @@ export declare function delay(ms: number): Promise<void>;
 export declare function hash(algorithm: string, data: ArrayBuffer | string): Promise<Uint8Array>;
 /** Computes an HMAC signature using the Web Crypto API. */
 export declare function hmac(algorithm: HmacAlgorithm, data: string | Uint8Array, keyStr: string): Promise<Uint8Array>;
-/** Inject CSS tag into the document */
-export declare function injectCss(css: string, id?: string): void;
 /** Generates a random integer between the specified minimum and maximum values (inclusive). */
 export declare function randomInt(max: number, min?: number): number;
 /** Recursively sorts object keys alphabetically for deterministic serialization. */

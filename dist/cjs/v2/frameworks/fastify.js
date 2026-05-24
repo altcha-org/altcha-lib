@@ -40,7 +40,7 @@ function create(options) {
             hmacKeySignatureSecret,
             ...createChallengeParameters(),
         });
-        return reply.send({
+        return reply.header('Cache-Control', 'no-store').send({
             configuration: setCookie
                 ? {
                     setCookie,

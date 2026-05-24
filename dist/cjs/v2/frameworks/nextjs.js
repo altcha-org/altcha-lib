@@ -38,7 +38,9 @@ function create(options) {
                 : undefined,
             ...challenge,
         };
-        const response = Response.json(body);
+        const response = Response.json(body, {
+            headers: { 'Cache-Control': 'no-store' },
+        });
         return response;
     }
     async function verifyHandler(req) {

@@ -73,17 +73,6 @@ export async function hmac(algorithm, data, keyStr) {
         : data);
     return new Uint8Array(signature);
 }
-/** Inject CSS tag into the document */
-export function injectCss(css, id = 'altcha-css') {
-    if (typeof document !== 'undefined' &&
-        document &&
-        !document.getElementById(id)) {
-        const style = document.createElement('style');
-        style.id = id;
-        style.textContent = css;
-        document.head.appendChild(style);
-    }
-}
 /** Generates a random integer between the specified minimum and maximum values (inclusive). */
 export function randomInt(max, min = 1) {
     const ab = new Uint32Array(1);

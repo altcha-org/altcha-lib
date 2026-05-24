@@ -1,4 +1,4 @@
-import { HTTPError, defineEventHandler, getCookie, deleteCookie, readBody, } from 'h3';
+import { HTTPError, defineEventHandler, getCookie, deleteCookie, readBody, setResponseHeader, } from 'h3';
 import { createChallenge } from '../pow.js';
 import { randomInt } from '../helpers.js';
 import { CappedMap } from '../capped-map.js';
@@ -6,7 +6,8 @@ import { deriveHmacKeySecret, verify } from './shared.js';
 export { CappedMap, deriveHmacKeySecret, randomInt };
 export function create(options) {
     const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, } = options;
-    const challengeHandler = defineEventHandler(async () => {
+    const challengeHandler = defineEventHandler(async (event) => {
+        setResponseHeader(event, 'Cache-Control', 'no-store');
         return {
             configuration: setCookie
                 ? {

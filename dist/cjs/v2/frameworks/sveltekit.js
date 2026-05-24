@@ -42,7 +42,7 @@ function create(options) {
                 }
                 : undefined,
             ...challenge,
-        });
+        }, { headers: { 'Cache-Control': 'no-store' } });
     }
     async function verifyHandler(event) {
         const payload = await getPayloadFromEvent(event, fieldName);
