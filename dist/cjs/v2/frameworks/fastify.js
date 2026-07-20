@@ -10,7 +10,7 @@ Object.defineProperty(exports, "deriveHmacKeySecret", { enumerable: true, get: f
 const capped_map_js_1 = require("../capped-map.js");
 Object.defineProperty(exports, "CappedMap", { enumerable: true, get: function () { return capped_map_js_1.CappedMap; } });
 function create(options) {
-    const { createChallengeParameters, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, } = options;
+    const { createChallengeParameters, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, verifyServer: verifyServerOptions, } = options;
     const deleteCookie = (reply, name, path = '/') => {
         reply.header('Set-Cookie', `${name}=; Path=${path ?? '/'}; Max-Age=0`);
     };
@@ -34,6 +34,9 @@ function create(options) {
         return request.body?.altcha;
     };
     const challengeHandler = async (request, reply) => {
+        if (!deriveKey || !createChallengeParameters) {
+            throw new Error('deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
+        }
         const challenge = await (0, pow_js_1.createChallenge)({
             deriveKey,
             hmacSignatureSecret,
@@ -51,14 +54,14 @@ function create(options) {
     };
     const verifyHandler = async (request, reply) => {
         const payload = await getPayloadFromRequest(request);
-        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
         return reply.send(result);
     };
     const middleware = (options = {}) => {
         const { throwOnFailure = true } = options;
         return async (request, reply) => {
             const payload = await getPayloadFromRequest(request, setCookie?.name);
-            const { error, payload: resultPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+            const { error, payload: resultPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
             request.altcha = {
                 error,
                 payload: resultPayload,

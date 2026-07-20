@@ -22,13 +22,14 @@ export declare function createAltchaMiddleware(options?: AltchaMiddlewareOptions
     };
 };
 export declare class AltchaService {
-    private readonly hmacSignatureSecret;
+    private readonly hmacSignatureSecret?;
     private readonly hmacKeySignatureSecret?;
     private readonly createChallengeParameters;
-    private readonly deriveKey;
+    private readonly deriveKey?;
     private readonly fieldName;
     private readonly setCookieOptions?;
     private readonly store?;
+    private readonly verifyServerOptions?;
     constructor(options: AltchaOptions);
     get setCookie(): RequireField<SetCookieOptions, 'name'> | undefined;
     getChallenge(): Promise<{
@@ -43,7 +44,7 @@ export declare class AltchaService {
     verify(payload: string | undefined): Promise<{
         error: string | null;
         payload: import("../types.js").Payload | import("../types.js").ServerSignaturePayload | null;
-        verification: import("../types.js").VerifySolutionResult | null;
+        verification: import("../types.js").VerifySolutionResult | import("../types.js").VerifyServerResult | null;
     }>;
 }
 export declare class AltchaController {
@@ -60,7 +61,7 @@ export declare class AltchaController {
     verifySolution(req: Request): Promise<{
         error: string | null;
         payload: import("../types.js").Payload | import("../types.js").ServerSignaturePayload | null;
-        verification: import("../types.js").VerifySolutionResult | null;
+        verification: import("../types.js").VerifySolutionResult | import("../types.js").VerifyServerResult | null;
     }>;
 }
 export declare class AltchaMiddleware implements NestMiddleware {

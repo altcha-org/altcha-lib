@@ -1,11 +1,12 @@
 import { verifySolution } from '../pow.js';
 import { verifyServerSignature } from '../server-signature.js';
+import { verifyServer } from '../verify-server.js';
 import { bufferToHex, hmac } from '../helpers.js';
 import { HmacAlgorithm, } from '../types.js';
 export async function deriveHmacKeySecret(masterSecret) {
     return bufferToHex(await hmac(HmacAlgorithm.SHA_256, masterSecret, 'derived-secret'));
 }
-export async function verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store) {
+export async function verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions) {
     if (!payload) {
         return {
             error: 'ALTCHA payload is missing.',
@@ -29,6 +30,12 @@ export async function verify(payload, deriveKey, hmacSignatureSecret, hmacKeySig
     try {
         switch (type) {
             case 'client':
+                if (!deriveKey) {
+                    throw new Error('deriveKey is required to verify self-hosted ALTCHA challenges.');
+                }
+                if (!hmacSignatureSecret) {
+                    throw new Error('hmacSignatureSecret is required to verify self-hosted ALTCHA challenges.');
+                }
                 challengeId = getChallengeId(payload);
                 if (store && challengeId) {
                     await checkChallengeId(store, challengeId);
@@ -40,7 +47,18 @@ export async function verify(payload, deriveKey, hmacSignatureSecret, hmacKeySig
                 if (store && challengeId) {
                     await checkChallengeId(store, challengeId);
                 }
-                verification = await verifyServerSignaturePayload(payload, hmacSignatureSecret);
+                if (verifyServerOptions) {
+                    verification = await verifyServer({
+                        ...verifyServerOptions,
+                        payload: payload,
+                    });
+                }
+                else {
+                    if (!hmacSignatureSecret) {
+                        throw new Error('hmacSignatureSecret or verifyServer must be configured to verify this payload.');
+                    }
+                    verification = await verifyServerSignaturePayload(payload, hmacSignatureSecret);
+                }
                 break;
             default:
                 throw new Error('ALTCHA payload is invalid.');
@@ -55,7 +73,8 @@ export async function verify(payload, deriveKey, hmacSignatureSecret, hmacKeySig
     }
     if (!verification?.verified) {
         return {
-            error: 'ALTCHA verification failed.',
+            error: (verification && 'reason' in verification && verification.reason) ||
+                'ALTCHA verification failed.',
             payload: payload,
             verification,
         };

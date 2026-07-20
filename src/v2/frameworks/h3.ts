@@ -35,9 +35,17 @@ export function create(options: AltchaOptions) {
 		hmacKeySignatureSecret,
 		setCookie,
 		store,
+		verifyServer: verifyServerOptions,
 	} = options;
 
 	const challengeHandler = defineEventHandler(async (event) => {
+		if (!deriveKey || !createChallengeParameters) {
+			throw new HTTPError({
+				message:
+					'deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.',
+				status: 500,
+			});
+		}
 		setResponseHeader(event, 'Cache-Control', 'no-store');
 		return {
 			configuration: setCookie
@@ -60,7 +68,8 @@ export function create(options: AltchaOptions) {
 			deriveKey,
 			hmacSignatureSecret,
 			hmacKeySignatureSecret,
-			store
+			store,
+			verifyServerOptions
 		);
 	});
 
@@ -104,7 +113,8 @@ export function create(options: AltchaOptions) {
 				deriveKey,
 				hmacSignatureSecret,
 				hmacKeySignatureSecret,
-				store
+				store,
+				verifyServerOptions
 			);
 
 			event.context.altcha = {

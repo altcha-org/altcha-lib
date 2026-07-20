@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifySolution = exports.verifyServerSignature = exports.verifyFieldsHash = exports.solveChallengeWorkers = exports.solveChallenge = exports.randomInt = exports.createChallenge = exports.HmacAlgorithm = exports.CappedMap = void 0;
+exports.verifySolution = exports.verifyServerSignature = exports.verifyServer = exports.verifyFieldsHash = exports.solveChallengeWorkers = exports.solveChallenge = exports.randomInt = exports.createChallenge = exports.HmacAlgorithm = exports.CappedMap = void 0;
 const pow_js_1 = require("./pow.js");
 Object.defineProperty(exports, "createChallenge", { enumerable: true, get: function () { return pow_js_1.createChallenge; } });
 Object.defineProperty(exports, "solveChallenge", { enumerable: true, get: function () { return pow_js_1.solveChallenge; } });
@@ -9,6 +9,8 @@ Object.defineProperty(exports, "verifySolution", { enumerable: true, get: functi
 const server_signature_js_1 = require("./server-signature.js");
 Object.defineProperty(exports, "verifyFieldsHash", { enumerable: true, get: function () { return server_signature_js_1.verifyFieldsHash; } });
 Object.defineProperty(exports, "verifyServerSignature", { enumerable: true, get: function () { return server_signature_js_1.verifyServerSignature; } });
+const verify_server_js_1 = require("./verify-server.js");
+Object.defineProperty(exports, "verifyServer", { enumerable: true, get: function () { return verify_server_js_1.verifyServer; } });
 const capped_map_js_1 = require("./capped-map.js");
 Object.defineProperty(exports, "CappedMap", { enumerable: true, get: function () { return capped_map_js_1.CappedMap; } });
 const helpers_js_1 = require("./helpers.js");
@@ -23,6 +25,7 @@ exports.default = {
     solveChallenge: pow_js_1.solveChallenge,
     solveChallengeWorkers: pow_js_1.solveChallengeWorkers,
     verifyFieldsHash: server_signature_js_1.verifyFieldsHash,
+    verifyServer: verify_server_js_1.verifyServer,
     verifyServerSignature: server_signature_js_1.verifyServerSignature,
     verifySolution: pow_js_1.verifySolution,
 };

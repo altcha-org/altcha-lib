@@ -1,9 +1,16 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { create } from '../../../src/v2/frameworks/express.js';
 import { deriveKey } from '../../../src/v2/algorithms/pbkdf2.js';
 import { createChallenge, solveChallenge } from '../../../src/v2/pow.js';
+
+function jsonResponse(status: number, data: unknown) {
+	return new Response(JSON.stringify(data), {
+		status,
+		headers: { 'Content-Type': 'application/json' },
+	});
+}
 
 describe('Express', () => {
 	const hmacSignatureSecret = 'secret.key';
@@ -157,6 +164,54 @@ describe('Express', () => {
 				const app = createApp();
 				const res = await request(app).post('/submit').send(`test=test`);
 				expect(res.text.includes('ALTCHA payload is missing')).toBeTruthy();
+			});
+		});
+
+		describe('remote verification (verifyServer)', () => {
+			test('should verify a Sentinel-issued payload via the remote API', async () => {
+				const remoteResult = {
+					apiKey: 'key_1',
+					verificationData: { verified: true },
+					verified: true,
+				};
+				const fetchMock = vi
+					.fn()
+					.mockResolvedValue(jsonResponse(200, remoteResult));
+				const remoteAltcha = create({
+					verifyServer: {
+						fetch: fetchMock,
+						url: 'https://sentinel.example.com/v1/verify/signature',
+					},
+				});
+				const sentinelPayload = btoa(
+					JSON.stringify({
+						algorithm: 'SHA-256',
+						id: 'chl_1',
+						signature: 'sig',
+						verificationData: 'verified=1',
+						verified: true,
+					})
+				);
+				const app = express();
+				app.use(express.json());
+				app.post('/verify', remoteAltcha.verifyHandler);
+				const res = await request(app).post('/verify').send({
+					altcha: sentinelPayload,
+				});
+				expect(res.body.verification).toEqual(remoteResult);
+				expect(fetchMock).toHaveBeenCalledTimes(1);
+			});
+
+			test('challengeHandler should fail clearly without deriveKey/createChallengeParameters', async () => {
+				const remoteAltcha = create({
+					verifyServer: {
+						url: 'https://sentinel.example.com/v1/verify/signature',
+					},
+				});
+				const app = express();
+				app.get('/challenge', remoteAltcha.challengeHandler);
+				const res = await request(app).get('/challenge');
+				expect(res.status).toBe(500);
 			});
 		});
 	});

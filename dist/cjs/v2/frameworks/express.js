@@ -13,8 +13,11 @@ const asyncHandler = (fn) => (req, res, next) => {
     fn(req, res, next).catch(next);
 };
 function create(options) {
-    const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, } = options;
+    const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, verifyServer: verifyServerOptions, } = options;
     const challengeHandler = asyncHandler(async (req, res) => {
+        if (!deriveKey || !createChallengeParameters) {
+            throw new Error('deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
+        }
         const challenge = await (0, pow_js_1.createChallenge)({
             deriveKey,
             hmacSignatureSecret,
@@ -32,7 +35,7 @@ function create(options) {
     });
     const verifyHandler = asyncHandler(async (req, res) => {
         const payload = await getPayloadFromRequest(req);
-        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
         res.json(result);
     });
     const getPayloadFromRequest = async (req, cookieName) => {
@@ -45,7 +48,7 @@ function create(options) {
         const { throwOnFailure = true } = options;
         return asyncHandler(async (req, res, next) => {
             const payload = await getPayloadFromRequest(req, setCookie?.name);
-            const { error, payload: resultPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+            const { error, payload: resultPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
             res.locals.altcha = {
                 error,
                 payload: resultPayload,

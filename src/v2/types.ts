@@ -258,6 +258,62 @@ export interface VerifyServerSignatureResult extends VerifySolutionResult {
 	verificationData?: ServerSignatureVerificationData | null;
 }
 
+export interface VerifyServerOptions {
+	/**
+	 * The payload to verify, as received from `POST /v1/verify`
+	 * (either the raw string or the decoded object).
+	 */
+	payload: string | ServerSignaturePayload | Record<string, unknown>;
+	/**
+	 * Full URL of the Sentinel `/v1/verify/signature` endpoint.
+	 */
+	url: string;
+	/**
+	 * API key secret. If provided, Sentinel checks that it matches the
+	 * API key associated with the payload.
+	 */
+	secret?: string;
+	/**
+	 * Custom fetch implementation. Defaults to the global `fetch`.
+	 */
+	fetch?: typeof fetch;
+	/**
+	 * Additional headers to send with the request.
+	 */
+	headers?: Record<string, string>;
+	/**
+	 * AbortController for cancelling the verification request.
+	 */
+	controller?: AbortController;
+	/**
+	 * Per-attempt request timeout in milliseconds.
+	 * Defaults to `10_000` (10 seconds).
+	 */
+	timeout?: number;
+	/**
+	 * Number of retry attempts after the first try.
+	 * Defaults to `0` (no retries).
+	 */
+	retries?: number;
+	/**
+	 * Base delay in milliseconds between retry attempts.
+	 * Defaults to `300`.
+	 */
+	retryDelay?: number;
+	/**
+	 * Backoff strategy applied to `retryDelay` between retries.
+	 * Defaults to `'exponential'`.
+	 */
+	retryBackoff?: 'fixed' | 'exponential';
+}
+
+export interface VerifyServerResult {
+	apiKey?: string | null;
+	reason?: string;
+	verificationData?: ServerSignatureVerificationData | null;
+	verified: boolean;
+}
+
 export interface VerifySolutionOptions {
 	/**
 	 * Challenge object to verify against, either decoded from the client payload

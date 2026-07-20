@@ -26,6 +26,13 @@ The `store` marks challenges as used to prevent reuse.
 
 See [`/docs/store.md`](/docs/store.md) for details.
 
+## Remote verification (Sentinel)
+
+Pass a `verifyServer` option to verify Sentinel-issued payloads remotely via Sentinel's
+`/v1/verify/signature` API instead of locally with `hmacSignatureSecret`.
+
+See [`/docs/server-signatures.md#remote-verification-sentinel-api`](/docs/server-signatures.md#remote-verification-sentinel-api) for details.
+
 ## Example
 
 [`/examples/express-example.ts`](/examples/express-example.ts)

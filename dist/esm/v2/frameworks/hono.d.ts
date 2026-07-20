@@ -84,6 +84,24 @@ export declare function create(options: AltchaOptions): {
             invalidSolution: boolean | null;
             time: number;
             verified: boolean;
+        } | {
+            apiKey?: string | null | undefined;
+            reason?: string | undefined;
+            verificationData?: {
+                [x: string]: import("hono/utils/types").JSONValue;
+                classification?: import("../types.js").ServerClassification | undefined;
+                email?: string | undefined;
+                expire?: number | undefined;
+                fields?: string[] | undefined;
+                fieldsHash?: string | undefined;
+                id?: string | undefined;
+                ipAddress?: string | undefined;
+                reasons?: string[] | undefined;
+                score?: number | undefined;
+                time?: number | undefined;
+                verified?: boolean | undefined;
+            } | null | undefined;
+            verified: boolean;
         } | null;
     }, import("hono/utils/http-status").ContentfulStatusCode, "json">>;
     getPayloadFromContext: (c: Context, cookieName?: string) => Promise<string | undefined>;

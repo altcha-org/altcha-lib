@@ -61,6 +61,7 @@ let AltchaService = class AltchaService {
     fieldName;
     setCookieOptions;
     store;
+    verifyServerOptions;
     constructor(options) {
         this.hmacSignatureSecret = options.hmacSignatureSecret;
         this.hmacKeySignatureSecret = options.hmacKeySignatureSecret;
@@ -69,16 +70,21 @@ let AltchaService = class AltchaService {
         this.fieldName = options.fieldName || 'altcha';
         this.setCookieOptions = options.setCookie;
         this.store = options.store;
+        this.verifyServerOptions = options.verifyServer;
     }
     get setCookie() {
         return this.setCookieOptions;
     }
     async getChallenge() {
+        const { createChallengeParameters, deriveKey } = this;
+        if (!deriveKey || !createChallengeParameters) {
+            throw new HttpException('deriveKey and createChallengeParameters are required to generate challenges. Omit the /challenge route when relying on Sentinel to issue challenges.', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         const challenge = await createChallenge({
-            deriveKey: this.deriveKey,
+            deriveKey,
             hmacSignatureSecret: this.hmacSignatureSecret,
             hmacKeySignatureSecret: this.hmacKeySignatureSecret,
-            ...this.createChallengeParameters(),
+            ...createChallengeParameters(),
         });
         return {
             configuration: this.setCookieOptions
@@ -94,7 +100,7 @@ let AltchaService = class AltchaService {
         return req.body?.[this.fieldName];
     }
     async verify(payload) {
-        return verify(payload, this.deriveKey, this.hmacSignatureSecret, this.hmacKeySignatureSecret, this.store);
+        return verify(payload, this.deriveKey, this.hmacSignatureSecret, this.hmacKeySignatureSecret, this.store, this.verifyServerOptions);
     }
 };
 AltchaService = __decorate([

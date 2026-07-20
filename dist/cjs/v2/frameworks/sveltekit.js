@@ -27,8 +27,11 @@ async function getPayloadFromEvent(event, fieldName, cookieName) {
     return body?.[fieldName];
 }
 function create(options) {
-    const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, } = options;
+    const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, verifyServer: verifyServerOptions, } = options;
     async function challengeHandler() {
+        if (!deriveKey || !createChallengeParameters) {
+            (0, kit_1.error)(500, 'deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
+        }
         const challenge = await (0, pow_js_1.createChallenge)({
             deriveKey,
             hmacSignatureSecret,
@@ -46,14 +49,14 @@ function create(options) {
     }
     async function verifyHandler(event) {
         const payload = await getPayloadFromEvent(event, fieldName);
-        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
         return (0, kit_1.json)(result);
     }
     function createHandle(middlewareOptions = {}) {
         const { throwOnFailure = true } = middlewareOptions;
         return async ({ event, resolve }) => {
             const payload = await getPayloadFromEvent(event, fieldName, setCookie?.name);
-            const { error: verifyError, payload: resultPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+            const { error: verifyError, payload: resultPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
             event.locals.altcha = {
                 error: verifyError,
                 payload: resultPayload,
@@ -72,7 +75,7 @@ function create(options) {
     }
     async function verifyEvent(event) {
         const payload = await getPayloadFromEvent(event, fieldName, setCookie?.name);
-        const { error: verifyError, payload: resultPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+        const { error: verifyError, payload: resultPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
         if (setCookie) {
             event.cookies.delete(setCookie.name, {
                 path: setCookie.path ?? '/',

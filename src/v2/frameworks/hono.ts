@@ -30,11 +30,18 @@ export function create(options: AltchaOptions) {
 		hmacKeySignatureSecret,
 		setCookie,
 		store,
+		verifyServer: verifyServerOptions,
 	} = options;
 
 	const challengeHandler = async <E extends Env, P extends string>(
 		c: Context<E, P>
 	) => {
+		if (!deriveKey || !createChallengeParameters) {
+			throw new HTTPException(500, {
+				message:
+					'deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.',
+			});
+		}
 		c.header('Cache-Control', 'no-store');
 		return c.json({
 			configuration: setCookie
@@ -60,7 +67,8 @@ export function create(options: AltchaOptions) {
 				deriveKey,
 				hmacSignatureSecret,
 				hmacKeySignatureSecret,
-				store
+				store,
+				verifyServerOptions
 			)
 		);
 	};
@@ -95,7 +103,8 @@ export function create(options: AltchaOptions) {
 				deriveKey,
 				hmacSignatureSecret,
 				hmacKeySignatureSecret,
-				store
+				store,
+				verifyServerOptions
 			);
 			c.set('altcha', {
 				error,

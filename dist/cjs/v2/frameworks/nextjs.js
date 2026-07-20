@@ -21,9 +21,12 @@ function deleteCookie(res, name, path) {
     res.headers.append('Set-Cookie', `${name}=; Path=${path ?? '/'}; Max-Age=0`);
 }
 function create(options) {
-    const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, } = options;
+    const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, verifyServer: verifyServerOptions, } = options;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async function challengeHandler(_req) {
+        if (!deriveKey || !createChallengeParameters) {
+            throw new Error('deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
+        }
         const challenge = await (0, pow_js_1.createChallenge)({
             deriveKey,
             hmacSignatureSecret,
@@ -45,7 +48,7 @@ function create(options) {
     }
     async function verifyHandler(req) {
         const payload = await getPayloadFromRequest(req);
-        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
         return Response.json(result);
     }
     async function getPayloadFromRequest(req, cookieName) {
@@ -69,7 +72,7 @@ function create(options) {
     }
     async function middleware(req, throwOnFailure = true) {
         const payload = await getPayloadFromRequest(req, setCookie?.name);
-        const { error, payload: verifiedPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+        const { error, payload: verifiedPayload, verification, } = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
         const result = {
             error,
             payload: verifiedPayload,

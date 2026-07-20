@@ -1,14 +1,16 @@
 import { verifySolution } from '../pow.js';
 import { verifyServerSignature } from '../server-signature.js';
+import { verifyServer } from '../verify-server.js';
 import { bufferToHex, hmac } from '../helpers.js';
 import {
 	DeriveKeyFunction,
 	HmacAlgorithm,
 	Payload,
 	ServerSignaturePayload,
+	VerifyServerResult,
 	VerifySolutionResult,
 } from '../types.js';
-import type { Store } from './types.js';
+import type { AltchaVerifyServerOptions, Store } from './types.js';
 
 export async function deriveHmacKeySecret(masterSecret: string) {
 	return bufferToHex(
@@ -18,14 +20,15 @@ export async function deriveHmacKeySecret(masterSecret: string) {
 
 export async function verify(
 	payload: unknown,
-	deriveKey: DeriveKeyFunction,
-	hmacSignatureSecret: string,
+	deriveKey: DeriveKeyFunction | undefined,
+	hmacSignatureSecret: string | undefined,
 	hmacKeySignatureSecret?: string,
-	store?: Store
+	store?: Store,
+	verifyServerOptions?: AltchaVerifyServerOptions
 ): Promise<{
 	error: string | null;
 	payload: Payload | ServerSignaturePayload | null;
-	verification: VerifySolutionResult | null;
+	verification: VerifySolutionResult | VerifyServerResult | null;
 }> {
 	if (!payload) {
 		return {
@@ -48,11 +51,22 @@ export async function verify(
 	let verification:
 		| Awaited<ReturnType<typeof verifyServerSignaturePayload>>
 		| VerifySolutionResult
+		| VerifyServerResult
 		| null = null;
 	let challengeId: string | null | undefined = null;
 	try {
 		switch (type) {
 			case 'client':
+				if (!deriveKey) {
+					throw new Error(
+						'deriveKey is required to verify self-hosted ALTCHA challenges.'
+					);
+				}
+				if (!hmacSignatureSecret) {
+					throw new Error(
+						'hmacSignatureSecret is required to verify self-hosted ALTCHA challenges.'
+					);
+				}
 				challengeId = getChallengeId(payload as Payload);
 				if (store && challengeId) {
 					await checkChallengeId(store, challengeId);
@@ -69,10 +83,22 @@ export async function verify(
 				if (store && challengeId) {
 					await checkChallengeId(store, challengeId);
 				}
-				verification = await verifyServerSignaturePayload(
-					payload as ServerSignaturePayload,
-					hmacSignatureSecret
-				);
+				if (verifyServerOptions) {
+					verification = await verifyServer({
+						...verifyServerOptions,
+						payload: payload as ServerSignaturePayload,
+					});
+				} else {
+					if (!hmacSignatureSecret) {
+						throw new Error(
+							'hmacSignatureSecret or verifyServer must be configured to verify this payload.'
+						);
+					}
+					verification = await verifyServerSignaturePayload(
+						payload as ServerSignaturePayload,
+						hmacSignatureSecret
+					);
+				}
 				break;
 			default:
 				throw new Error('ALTCHA payload is invalid.');
@@ -86,7 +112,9 @@ export async function verify(
 	}
 	if (!verification?.verified) {
 		return {
-			error: 'ALTCHA verification failed.',
+			error:
+				(verification && 'reason' in verification && verification.reason) ||
+				'ALTCHA verification failed.',
 			payload: payload as Payload,
 			verification,
 		};

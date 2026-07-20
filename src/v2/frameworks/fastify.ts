@@ -27,6 +27,7 @@ export function create(options: AltchaOptions) {
 		hmacKeySignatureSecret,
 		setCookie,
 		store,
+		verifyServer: verifyServerOptions,
 	} = options;
 
 	const deleteCookie = (
@@ -67,6 +68,11 @@ export function create(options: AltchaOptions) {
 		request: FastifyRequest,
 		reply: FastifyReply
 	) => {
+		if (!deriveKey || !createChallengeParameters) {
+			throw new Error(
+				'deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.'
+			);
+		}
 		const challenge = await createChallenge({
 			deriveKey,
 			hmacSignatureSecret,
@@ -93,7 +99,8 @@ export function create(options: AltchaOptions) {
 			deriveKey,
 			hmacSignatureSecret,
 			hmacKeySignatureSecret,
-			store
+			store,
+			verifyServerOptions
 		);
 		return reply.send(result);
 	};
@@ -111,7 +118,8 @@ export function create(options: AltchaOptions) {
 				deriveKey,
 				hmacSignatureSecret,
 				hmacKeySignatureSecret,
-				store
+				store,
+				verifyServerOptions
 			);
 			request.altcha = {
 				error,

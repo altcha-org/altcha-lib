@@ -28,6 +28,7 @@ import type {
 	AltchaMiddlewareOptions,
 	AltchaOptions,
 	AltchaResult,
+	AltchaVerifyServerOptions,
 	RequireField,
 	Store,
 } from './types.js';
@@ -89,13 +90,14 @@ export function createAltchaMiddleware(options: AltchaMiddlewareOptions = {}) {
 
 @Injectable()
 export class AltchaService {
-	private readonly hmacSignatureSecret: string;
+	private readonly hmacSignatureSecret?: string;
 	private readonly hmacKeySignatureSecret?: string;
 	private readonly createChallengeParameters: AltchaOptions['createChallengeParameters'];
-	private readonly deriveKey: DeriveKeyFunction;
+	private readonly deriveKey?: DeriveKeyFunction;
 	private readonly fieldName: string;
 	private readonly setCookieOptions?: RequireField<SetCookieOptions, 'name'>;
 	private readonly store?: Store;
+	private readonly verifyServerOptions?: AltchaVerifyServerOptions;
 
 	constructor(@Inject(ALTCHA_OPTIONS) options: AltchaOptions) {
 		this.hmacSignatureSecret = options.hmacSignatureSecret;
@@ -105,6 +107,7 @@ export class AltchaService {
 		this.fieldName = options.fieldName || 'altcha';
 		this.setCookieOptions = options.setCookie;
 		this.store = options.store;
+		this.verifyServerOptions = options.verifyServer;
 	}
 
 	get setCookie(): RequireField<SetCookieOptions, 'name'> | undefined {
@@ -112,11 +115,18 @@ export class AltchaService {
 	}
 
 	async getChallenge() {
+		const { createChallengeParameters, deriveKey } = this;
+		if (!deriveKey || !createChallengeParameters) {
+			throw new HttpException(
+				'deriveKey and createChallengeParameters are required to generate challenges. Omit the /challenge route when relying on Sentinel to issue challenges.',
+				HttpStatus.INTERNAL_SERVER_ERROR
+			);
+		}
 		const challenge = await createChallenge({
-			deriveKey: this.deriveKey,
+			deriveKey,
 			hmacSignatureSecret: this.hmacSignatureSecret,
 			hmacKeySignatureSecret: this.hmacKeySignatureSecret,
-			...this.createChallengeParameters(),
+			...createChallengeParameters(),
 		});
 		return {
 			configuration: this.setCookieOptions
@@ -139,7 +149,8 @@ export class AltchaService {
 			this.deriveKey,
 			this.hmacSignatureSecret,
 			this.hmacKeySignatureSecret,
-			this.store
+			this.store,
+			this.verifyServerOptions
 		);
 	}
 }

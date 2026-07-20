@@ -1,10 +1,11 @@
 import { createChallenge, solveChallenge, solveChallengeWorkers, verifySolution } from './pow.js';
 import { verifyFieldsHash, verifyServerSignature } from './server-signature.js';
+import { verifyServer } from './verify-server.js';
 import { CappedMap } from './capped-map.js';
 import { randomInt } from './helpers.js';
 import { HmacAlgorithm } from './types.js';
 export type * from './types.js';
-export { CappedMap, HmacAlgorithm, createChallenge, randomInt, solveChallenge, solveChallengeWorkers, verifyFieldsHash, verifyServerSignature, verifySolution, };
+export { CappedMap, HmacAlgorithm, createChallenge, randomInt, solveChallenge, solveChallengeWorkers, verifyFieldsHash, verifyServer, verifyServerSignature, verifySolution, };
 declare const _default: {
     CappedMap: typeof CappedMap;
     HmacAlgorithm: typeof HmacAlgorithm;
@@ -13,6 +14,7 @@ declare const _default: {
     solveChallenge: typeof solveChallenge;
     solveChallengeWorkers: typeof solveChallengeWorkers;
     verifyFieldsHash: typeof verifyFieldsHash;
+    verifyServer: typeof verifyServer;
     verifyServerSignature: typeof verifyServerSignature;
     verifySolution: typeof verifySolution;
 };

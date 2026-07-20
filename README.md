@@ -55,6 +55,8 @@ The library includes plugins for several popular frameworks to simplify integrat
 
 If your framework is not listed, see the [Advanced Usage](/docs/advanced-usage.md) guide for custom integrations.
 
+All plugins also support remote verification via ALTCHA Sentinel (`verifyServer` option) — see [`/docs/server-signatures.md`](/docs/server-signatures.md#remote-verification-sentinel-api).
+
 ## Documentation
 
 - Advanced Usage: [`/docs/advanced-usage.md`](/docs/advanced-usage.md)
@@ -216,6 +218,32 @@ Returns `VerifyServerSignatureResult` (extends `VerifySolutionResult`):
 |---|---|---|
 | `verified` | `boolean` | Whether the signature is valid. |
 | `verificationData` | `ServerSignatureVerificationData \| null` | Parsed verification data. |
+
+#### `verifyServer(options: VerifyServerOptions): Promise<VerifyServerResult>`
+
+Verifies a payload remotely by calling ALTCHA Sentinel's `POST /v1/verify/signature` API, instead of verifying the HMAC signature locally.
+
+| Option | Type | Description |
+|---|---|---|
+| `payload` | `string \| ServerSignaturePayload \| Record<string, unknown>` | The payload to verify, as received from `POST /v1/verify`. |
+| `url` | `string` | Full URL of the Sentinel `/v1/verify/signature` endpoint. |
+| `secret` | `string?` | API key secret. If provided, Sentinel checks that it matches the API key associated with the payload. |
+| `fetch` | `typeof fetch?` | Custom fetch implementation. Defaults to the global `fetch`. |
+| `headers` | `Record<string, string>?` | Additional headers to send with the request. |
+| `controller` | `AbortController?` | For cancelling the verification request. |
+| `timeout` | `number?` | Per-attempt request timeout in milliseconds. Defaults to `10000`. |
+| `retries` | `number?` | Number of retry attempts after the first try. Defaults to `0`. |
+| `retryDelay` | `number?` | Base delay in milliseconds between retries. Defaults to `300`. |
+| `retryBackoff` | `'fixed' \| 'exponential'?` | Backoff strategy for `retryDelay`. Defaults to `'exponential'`. |
+
+Returns `VerifyServerResult`:
+
+| Field | Type | Description |
+|---|---|---|
+| `verified` | `boolean` | Whether the payload was successfully verified. |
+| `apiKey` | `string \| null?` | API key associated with the verification. |
+| `reason` | `string?` | Reason or error message if verification failed. |
+| `verificationData` | `ServerSignatureVerificationData \| null?` | Verification data returned by Sentinel. |
 
 #### `obfuscate(str: string, options?): Promise<string>`
 

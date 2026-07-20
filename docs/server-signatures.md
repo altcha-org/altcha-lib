@@ -19,3 +19,47 @@ const altcha = create({
 
 For more details about the differences between self-contained and Sentinel verification, see the documentation:
 [https://altcha.org/docs/v2/server-verification/](https://altcha.org/docs/v2/server-verification/)
+
+## Remote verification (Sentinel API)
+
+Instead of verifying the HMAC signature locally, you can call Sentinel's `/v1/verify/signature` API directly with `verifyServer`. This avoids managing the HMAC secret in your server, at the cost of a network round-trip:
+
+```ts
+import { verifyServer } from 'altcha-lib';
+
+const result = await verifyServer({
+  payload, // the payload received from POST /v1/verify
+  url: 'https://sentinel.example.com/v1/verify/signature',
+  secret: API_KEY_SECRET, // optional, checked against the payload's API key
+  timeout: 10_000,
+  retries: 2,
+});
+
+if (result.verified) {
+  // ...
+}
+```
+
+### Using remote verification with framework plugins
+
+All framework plugins (Express, Fastify, NestJS, Next.js, Nuxt/H3, SvelteKit, Hono) accept
+a `verifyServer` option. When set, Sentinel-issued payloads submitted to `verifyHandler` /
+`middleware` are verified remotely via `verifyServer` instead of locally, so you don't need
+to configure `hmacSignatureSecret` at all:
+
+```ts
+const altcha = create({
+  verifyServer: {
+    url: 'https://sentinel.example.com/v1/verify/signature',
+    secret: API_KEY_SECRET, // optional
+    timeout: 10_000,
+    retries: 2,
+  },
+});
+```
+
+`deriveKey` and `createChallengeParameters` are also optional — they're only needed for
+`challengeHandler` and for verifying self-hosted (non-Sentinel) payloads. If you're relying
+entirely on Sentinel to issue and sign challenges, omit all three and don't wire up
+`challengeHandler`. `verifyHandler` and `middleware` work as usual, they just verify
+remotely.

@@ -22,7 +22,7 @@ export declare function create(options: AltchaOptions): {
     verifyHandler: import("h3").EventHandlerWithFetch<import("h3").EventHandlerRequest, Promise<{
         error: string | null;
         payload: import("../types.js").Payload | import("../types.js").ServerSignaturePayload | null;
-        verification: import("../types.js").VerifySolutionResult | null;
+        verification: import("../types.js").VerifySolutionResult | import("../types.js").VerifyServerResult | null;
     }>>;
     getPayloadFromEvent: (event: H3Event, cookieName?: string) => Promise<string | undefined>;
     middleware: (options?: AltchaMiddlewareOptions) => import("h3").EventHandlerWithFetch<import("h3").EventHandlerRequest, Promise<void>>;

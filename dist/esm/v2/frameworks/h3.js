@@ -5,8 +5,14 @@ import { CappedMap } from '../capped-map.js';
 import { deriveHmacKeySecret, verify } from './shared.js';
 export { CappedMap, deriveHmacKeySecret, randomInt };
 export function create(options) {
-    const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, } = options;
+    const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, verifyServer: verifyServerOptions, } = options;
     const challengeHandler = defineEventHandler(async (event) => {
+        if (!deriveKey || !createChallengeParameters) {
+            throw new HTTPError({
+                message: 'deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.',
+                status: 500,
+            });
+        }
         setResponseHeader(event, 'Cache-Control', 'no-store');
         return {
             configuration: setCookie
@@ -23,7 +29,7 @@ export function create(options) {
         };
     });
     const verifyHandler = defineEventHandler(async (event) => {
-        return await verify(await getPayloadFromEvent(event), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+        return await verify(await getPayloadFromEvent(event), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
     });
     const getPayloadFromEvent = async (event, cookieName) => {
         let payload = undefined;
@@ -54,7 +60,7 @@ export function create(options) {
     const middleware = (options = {}) => {
         const { throwOnFailure = true } = options;
         return defineEventHandler(async (event) => {
-            const { error, payload, verification } = await verify(await getPayloadFromEvent(event, setCookie?.name), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
+            const { error, payload, verification } = await verify(await getPayloadFromEvent(event, setCookie?.name), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
             event.context.altcha = {
                 error,
                 payload,
