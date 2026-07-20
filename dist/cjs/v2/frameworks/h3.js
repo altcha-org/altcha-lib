@@ -35,7 +35,7 @@ function create(options) {
         };
     });
     const verifyHandler = (0, h3_1.defineEventHandler)(async (event) => {
-        return await (0, shared_js_1.verify)(await getPayloadFromEvent(event), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
+        return await (0, shared_js_1.verify)(await getPayloadFromEvent(event), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
     });
     const getPayloadFromEvent = async (event, cookieName) => {
         let payload = undefined;

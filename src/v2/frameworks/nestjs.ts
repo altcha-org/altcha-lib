@@ -68,7 +68,7 @@ export function createAltchaMiddleware(options: AltchaMiddlewareOptions = {}) {
 				error,
 				payload: resultPayload,
 				verification,
-			} = await this.altchaService.verify(payload);
+			} = await this.altchaService.verify(payload, { allowRemote: true });
 			req.altcha = {
 				error,
 				payload: resultPayload,
@@ -143,14 +143,17 @@ export class AltchaService {
 		return req.body?.[this.fieldName];
 	}
 
-	async verify(payload: string | undefined) {
+	async verify(
+		payload: string | undefined,
+		options: { allowRemote?: boolean } = {}
+	) {
 		return verify(
 			payload,
 			this.deriveKey,
 			this.hmacSignatureSecret,
 			this.hmacKeySignatureSecret,
 			this.store,
-			this.verifyServerOptions
+			options.allowRemote ? this.verifyServerOptions : undefined
 		);
 	}
 }
@@ -184,7 +187,7 @@ export class AltchaMiddleware implements NestMiddleware {
 			error,
 			payload: resultPayload,
 			verification,
-		} = await this.altchaService.verify(payload);
+		} = await this.altchaService.verify(payload, { allowRemote: true });
 		req.altcha = {
 			error,
 			payload: resultPayload,

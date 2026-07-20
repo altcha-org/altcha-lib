@@ -26,6 +26,12 @@ if (result?.verification?.verified === true) {
 
 **Note:** The field name `altcha` can be changed using the `fieldName` option in the `create()` configuration.
 
+**Note:** This route always verifies locally, even if `verifyServer` is configured — it never
+calls out to Sentinel. It's meant for external/custom integrations that trust your server's
+own `hmacSignatureSecret`-based check. If a custom integration needs remote Sentinel
+verification, call the exported `verifyServer()` function directly. See
+[`/docs/server-signatures.md`](/docs/server-signatures.md#remote-verification-sentinel-api).
+
 ## Verification Result
 
 ```ts

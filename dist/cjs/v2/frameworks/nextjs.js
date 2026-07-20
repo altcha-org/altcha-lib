@@ -48,7 +48,7 @@ function create(options) {
     }
     async function verifyHandler(req) {
         const payload = await getPayloadFromRequest(req);
-        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
+        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
         return Response.json(result);
     }
     async function getPayloadFromRequest(req, cookieName) {

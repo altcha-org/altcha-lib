@@ -68,8 +68,7 @@ export function create(options: AltchaOptions) {
 			deriveKey,
 			hmacSignatureSecret,
 			hmacKeySignatureSecret,
-			store,
-			verifyServerOptions
+			store
 		);
 	});
 

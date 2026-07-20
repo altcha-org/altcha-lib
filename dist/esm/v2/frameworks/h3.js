@@ -29,7 +29,7 @@ export function create(options) {
         };
     });
     const verifyHandler = defineEventHandler(async (event) => {
-        return await verify(await getPayloadFromEvent(event), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
+        return await verify(await getPayloadFromEvent(event), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
     });
     const getPayloadFromEvent = async (event, cookieName) => {
         let payload = undefined;

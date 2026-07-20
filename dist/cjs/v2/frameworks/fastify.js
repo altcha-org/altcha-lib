@@ -54,7 +54,7 @@ function create(options) {
     };
     const verifyHandler = async (request, reply) => {
         const payload = await getPayloadFromRequest(request);
-        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
+        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
         return reply.send(result);
     };
     const middleware = (options = {}) => {

@@ -98,6 +98,12 @@ bun run --port 3000 examples/hono-example.ts
 deno serve --allow-net --sloppy-imports --port 3000 examples/hono-example.ts
 ```
 
+**Hono + Sentinel remote verification example (Bun):**
+
+```sh
+bun run --port 3000 examples/hono-sentinel-example.ts
+```
+
 ## Breaking Changes (v2)
 
 Version 2 introduces a new proof-of-work mechanism and challenge format. See the [PoW documentation](https://playground.altcha.org/#/about) for details.

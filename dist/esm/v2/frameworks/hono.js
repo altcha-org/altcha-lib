@@ -29,7 +29,7 @@ export function create(options) {
         });
     };
     const verifyHandler = async (c) => {
-        return c.json(await verify(await getPayloadFromContext(c), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions));
+        return c.json(await verify(await getPayloadFromContext(c), deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store));
     };
     const getPayloadFromContext = async (c, cookieName) => {
         let payload = undefined;

@@ -49,7 +49,7 @@ function create(options) {
     }
     async function verifyHandler(event) {
         const payload = await getPayloadFromEvent(event, fieldName);
-        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
+        const result = await (0, shared_js_1.verify)(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
         return (0, kit_1.json)(result);
     }
     function createHandle(middlewareOptions = {}) {

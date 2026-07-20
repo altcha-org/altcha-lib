@@ -42,7 +42,7 @@ export function create(options) {
     }
     async function verifyHandler(req) {
         const payload = await getPayloadFromRequest(req);
-        const result = await verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
+        const result = await verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
         return Response.json(result);
     }
     async function getPayloadFromRequest(req, cookieName) {

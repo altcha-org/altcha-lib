@@ -43,9 +43,9 @@ if (result.verified) {
 ### Using remote verification with framework plugins
 
 All framework plugins (Express, Fastify, NestJS, Next.js, Nuxt/H3, SvelteKit, Hono) accept
-a `verifyServer` option. When set, Sentinel-issued payloads submitted to `verifyHandler` /
-`middleware` are verified remotely via `verifyServer` instead of locally, so you don't need
-to configure `hmacSignatureSecret` at all:
+a `verifyServer` option. When set, payloads submitted through `middleware` (or SvelteKit's
+`createHandle`/`verifyEvent`) are verified remotely via `verifyServer` instead of locally, so
+you don't need to configure `hmacSignatureSecret` at all:
 
 ```ts
 const altcha = create({
@@ -61,5 +61,10 @@ const altcha = create({
 `deriveKey` and `createChallengeParameters` are also optional — they're only needed for
 `challengeHandler` and for verifying self-hosted (non-Sentinel) payloads. If you're relying
 entirely on Sentinel to issue and sign challenges, omit all three and don't wire up
-`challengeHandler`. `verifyHandler` and `middleware` work as usual, they just verify
-remotely.
+`challengeHandler`.
+
+**Note:** `verifyHandler` (the standalone `/verify` endpoint intended for custom, external
+integrations — see [`/docs/verify-route.md`](/docs/verify-route.md)) never uses `verifyServer`,
+even when it's configured. It only verifies payloads locally. If a custom integration needs
+remote Sentinel verification, call the exported `verifyServer()` function directly instead of
+going through the plugin's `/verify` route.

@@ -29,7 +29,7 @@ export function create(options) {
     });
     const verifyHandler = asyncHandler(async (req, res) => {
         const payload = await getPayloadFromRequest(req);
-        const result = await verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store, verifyServerOptions);
+        const result = await verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
         res.json(result);
     });
     const getPayloadFromRequest = async (req, cookieName) => {

@@ -36,7 +36,7 @@ function createAltchaMiddleware(options = {}) {
         }
         async use(req, res, next) {
             const payload = this.altchaService.getPayloadFromRequest(req);
-            const { error, payload: resultPayload, verification, } = await this.altchaService.verify(payload);
+            const { error, payload: resultPayload, verification, } = await this.altchaService.verify(payload, { allowRemote: true });
             req.altcha = {
                 error,
                 payload: resultPayload,
@@ -96,8 +96,8 @@ let AltchaService = class AltchaService {
         }
         return req.body?.[this.fieldName];
     }
-    async verify(payload) {
-        return (0, shared_js_1.verify)(payload, this.deriveKey, this.hmacSignatureSecret, this.hmacKeySignatureSecret, this.store, this.verifyServerOptions);
+    async verify(payload, options = {}) {
+        return (0, shared_js_1.verify)(payload, this.deriveKey, this.hmacSignatureSecret, this.hmacKeySignatureSecret, this.store, options.allowRemote ? this.verifyServerOptions : undefined);
     }
 };
 exports.AltchaService = AltchaService;
@@ -143,7 +143,7 @@ let AltchaMiddleware = class AltchaMiddleware {
     }
     async use(req, res, next) {
         const payload = this.altchaService.getPayloadFromRequest(req, this.altchaService.setCookie?.name);
-        const { error, payload: resultPayload, verification, } = await this.altchaService.verify(payload);
+        const { error, payload: resultPayload, verification, } = await this.altchaService.verify(payload, { allowRemote: true });
         req.altcha = {
             error,
             payload: resultPayload,

@@ -41,7 +41,9 @@ export declare class AltchaService {
         } | undefined;
     }>;
     getPayloadFromRequest(req: Request, cookieName?: string): string | undefined;
-    verify(payload: string | undefined): Promise<{
+    verify(payload: string | undefined, options?: {
+        allowRemote?: boolean;
+    }): Promise<{
         error: string | null;
         payload: import("../types.js").Payload | import("../types.js").ServerSignaturePayload | null;
         verification: import("../types.js").VerifySolutionResult | import("../types.js").VerifyServerResult | null;

@@ -168,7 +168,17 @@ describe('Express', () => {
 		});
 
 		describe('remote verification (verifyServer)', () => {
-			test('should verify a Sentinel-issued payload via the remote API', async () => {
+			const sentinelPayload = btoa(
+				JSON.stringify({
+					algorithm: 'SHA-256',
+					id: 'chl_1',
+					signature: 'sig',
+					verificationData: 'verified=1',
+					verified: true,
+				})
+			);
+
+			test('middleware should verify a Sentinel-issued payload via the remote API', async () => {
 				const remoteResult = {
 					apiKey: 'key_1',
 					verificationData: { verified: true },
@@ -183,23 +193,40 @@ describe('Express', () => {
 						url: 'https://sentinel.example.com/v1/verify/signature',
 					},
 				});
-				const sentinelPayload = btoa(
-					JSON.stringify({
-						algorithm: 'SHA-256',
-						id: 'chl_1',
-						signature: 'sig',
-						verificationData: 'verified=1',
-						verified: true,
-					})
-				);
+				const app = express();
+				app.use(express.json());
+				app.use(express.urlencoded({ extended: true }));
+				app.post('/submit', remoteAltcha.middleware(), (req, res) => {
+					res.json({ success: true });
+				});
+				const res = await request(app)
+					.post('/submit')
+					.send(`altcha=${encodeURIComponent(sentinelPayload)}`);
+				expect(res.body).toEqual({ success: true });
+				expect(fetchMock).toHaveBeenCalledTimes(1);
+			});
+
+			test('verifyHandler should never call the remote API, even when verifyServer is configured', async () => {
+				const fetchMock = vi
+					.fn()
+					.mockResolvedValue(jsonResponse(200, { verified: true }));
+				const remoteAltcha = create({
+					verifyServer: {
+						fetch: fetchMock,
+						url: 'https://sentinel.example.com/v1/verify/signature',
+					},
+				});
 				const app = express();
 				app.use(express.json());
 				app.post('/verify', remoteAltcha.verifyHandler);
 				const res = await request(app).post('/verify').send({
 					altcha: sentinelPayload,
 				});
-				expect(res.body.verification).toEqual(remoteResult);
-				expect(fetchMock).toHaveBeenCalledTimes(1);
+				expect(res.body.error).toBe(
+					'hmacSignatureSecret or verifyServer must be configured to verify this payload.'
+				);
+				expect(res.body.verification).toBeNull();
+				expect(fetchMock).not.toHaveBeenCalled();
 			});
 
 			test('challengeHandler should fail clearly without deriveKey/createChallengeParameters', async () => {
