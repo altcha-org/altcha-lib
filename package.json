@@ -186,6 +186,7 @@
     "cookie": "^1.1.1",
 		"esbuild": "^0.28.1",
     "file-type": "^21.3.1",
+    "minimatch": "^10.2.5",
     "multer": "^2.2.0"
   }
 }
