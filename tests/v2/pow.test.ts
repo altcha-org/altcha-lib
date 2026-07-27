@@ -415,6 +415,55 @@ describe('pow', () => {
 				verified: false,
 			});
 		});
+
+		test('should fail verification when fallback solution violates keyPrefix', async () => {
+			// No hmacKeySignatureSecret -> verifySolution falls back to path 4b,
+			// re-deriving the key from the submitted counter.
+			const challenge = await createChallenge({
+				algorithm: 'PBKDF2/SHA-256',
+				cost: 10,
+				deriveKey: pbkdf2.deriveKey,
+				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+			});
+
+			// Learn the honest KDF output for counter 0 with exactly one hash
+			// computation: solve a probe copy of the challenge whose keyPrefix
+			// is '' (matches immediately, no search).
+			const honest = (await solveChallenge({
+				challenge: {
+					parameters: { ...challenge.parameters, keyPrefix: '' },
+				},
+				deriveKey: pbkdf2.deriveKey,
+			})) as Solution;
+
+			// Pick a keyPrefix the honest key is guaranteed not to satisfy: a
+			// byte can't be both 0x00 and 0xff.
+			const mismatchedPrefix = honest.derivedKey.startsWith('00') ? 'ff' : '00';
+			challenge.parameters.keyPrefix = mismatchedPrefix;
+			const signed = await signChallenge(
+				HmacAlgorithm.SHA_256,
+				challenge.parameters,
+				undefined,
+				HMAC_SIGNATURE_SECRET
+			);
+
+			// Submit the honestly-derived key/counter pair (one KDF execution,
+			// no prefix search) against the challenge whose signed keyPrefix
+			// it does not satisfy.
+			const result = await verifySolution({
+				challenge: signed,
+				deriveKey: pbkdf2.deriveKey,
+				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+				solution: honest,
+			});
+			expect(result).toEqual({
+				expired: false,
+				invalidSignature: false,
+				invalidSolution: true,
+				time: expect.any(Number),
+				verified: false,
+			});
+		});
 	});
 
 	describe('PasswordBuffer', () => {

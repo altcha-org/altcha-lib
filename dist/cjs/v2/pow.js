@@ -273,12 +273,19 @@ async function verifySolution(options) {
             verified: derivedKeySignatureValid,
         };
     }
-    // 4b. Otherwise, re-derive the key from the solution's counter and compare.
+    // 4b. Otherwise, re-derive the key from the solution's counter, compare it
+    // against the submitted key, and require it to satisfy the signed key prefix.
     const nonceBuf = (0, helpers_js_1.hexToBuffer)(challenge.parameters.nonce);
     const saltBuf = (0, helpers_js_1.hexToBuffer)(challenge.parameters.salt);
     const { derivedKey } = await deriveKey(challenge.parameters, saltBuf, new PasswordBuffer(nonceBuf, counterMode).setCounter(solution.counter));
     const derivedKeyHex = (0, helpers_js_1.bufferToHex)(derivedKey);
-    const invalidSolution = !(0, helpers_js_1.constantTimeEqual)(derivedKeyHex, solution.derivedKey);
+    const keyMatches = (0, helpers_js_1.constantTimeEqual)(derivedKeyHex, solution.derivedKey);
+    const keyPrefix = challenge.parameters.keyPrefix;
+    const keyPrefixBuf = keyPrefix.length % 2 === 0 ? (0, helpers_js_1.hexToBuffer)(keyPrefix) : null;
+    const prefixMatches = keyPrefixBuf
+        ? (0, helpers_js_1.bufferStartsWith)(derivedKey, keyPrefixBuf)
+        : derivedKeyHex.startsWith(keyPrefix);
+    const invalidSolution = !(keyMatches && prefixMatches);
     return {
         expired: false,
         invalidSignature: false,
