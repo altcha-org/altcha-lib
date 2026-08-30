@@ -42,6 +42,19 @@ export interface AltchaResponse {
     getHeader?: (name: string) => number | string | string[] | undefined;
 }
 type NextFunction = (error?: unknown) => void;
+/**
+ * Options for {@link AltchaModule.registerAsync}.
+ *
+ * `TFactoryArgs` is inferred from the `useFactory` signature, so providers
+ * listed in `inject` can be typed directly on the factory parameters
+ * (e.g. `useFactory: (config: ConfigService) => ({ ... })`) without falling
+ * back to `(...args: unknown[])`.
+ */
+export interface AltchaModuleAsyncOptions<TFactoryArgs extends unknown[] = unknown[]> {
+    useFactory: (...args: TFactoryArgs) => Promise<AltchaOptions> | AltchaOptions;
+    inject?: (InjectionToken | OptionalFactoryDependency)[];
+    imports?: (DynamicModule | Type<unknown> | ForwardReference<unknown> | Promise<DynamicModule>)[];
+}
 export declare const Altcha: (...dataOrPipes: unknown[]) => ParameterDecorator;
 export declare function createAltchaMiddleware(options?: AltchaMiddlewareOptions): {
     new (altchaService: AltchaService): {
@@ -126,10 +139,6 @@ export declare class AltchaGuard implements CanActivate {
 }
 export declare class AltchaModule {
     static register(options: AltchaOptions): DynamicModule;
-    static registerAsync(asyncOptions: {
-        useFactory: (...args: unknown[]) => Promise<AltchaOptions> | AltchaOptions;
-        inject?: (InjectionToken | OptionalFactoryDependency)[];
-        imports?: (DynamicModule | Type<unknown> | ForwardReference<unknown> | Promise<DynamicModule>)[];
-    }): DynamicModule;
+    static registerAsync<TFactoryArgs extends unknown[] = unknown[]>(asyncOptions: AltchaModuleAsyncOptions<TFactoryArgs>): DynamicModule;
 }
 export default AltchaModule;

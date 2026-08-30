@@ -81,6 +81,27 @@ export interface AltchaResponse {
 type NextFunction = (error?: unknown) => void;
 
 /**
+ * Options for {@link AltchaModule.registerAsync}.
+ *
+ * `TFactoryArgs` is inferred from the `useFactory` signature, so providers
+ * listed in `inject` can be typed directly on the factory parameters
+ * (e.g. `useFactory: (config: ConfigService) => ({ ... })`) without falling
+ * back to `(...args: unknown[])`.
+ */
+export interface AltchaModuleAsyncOptions<
+	TFactoryArgs extends unknown[] = unknown[],
+> {
+	useFactory: (...args: TFactoryArgs) => Promise<AltchaOptions> | AltchaOptions;
+	inject?: (InjectionToken | OptionalFactoryDependency)[];
+	imports?: (
+		| DynamicModule
+		| Type<unknown>
+		| ForwardReference<unknown>
+		| Promise<DynamicModule>
+	)[];
+}
+
+/**
  * Reads request cookies without assuming a cookie-parser is installed.
  * Prefers a parsed `cookies` object (Express `cookie-parser`, `@fastify/cookie`)
  * and falls back to parsing the raw `Cookie` header otherwise.
@@ -372,16 +393,9 @@ export class AltchaModule {
 		};
 	}
 
-	static registerAsync(asyncOptions: {
-		useFactory: (...args: unknown[]) => Promise<AltchaOptions> | AltchaOptions;
-		inject?: (InjectionToken | OptionalFactoryDependency)[];
-		imports?: (
-			| DynamicModule
-			| Type<unknown>
-			| ForwardReference<unknown>
-			| Promise<DynamicModule>
-		)[];
-	}): DynamicModule {
+	static registerAsync<TFactoryArgs extends unknown[] = unknown[]>(
+		asyncOptions: AltchaModuleAsyncOptions<TFactoryArgs>
+	): DynamicModule {
 		return {
 			module: AltchaModule,
 			imports: asyncOptions.imports ?? [],

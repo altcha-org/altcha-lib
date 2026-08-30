@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 import { describe, expect, test, vi } from 'vitest';
+import type { FactoryProvider } from '@nestjs/common';
 import {
+	AltchaModule,
 	AltchaService,
 	createAltchaGuard,
 	createAltchaMiddleware,
@@ -296,6 +298,76 @@ describe('NestJS', () => {
 			const next = vi.fn();
 			await middleware.use({ body: {} }, {}, next);
 			expect(next).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe('AltchaModule.registerAsync()', () => {
+		class ConfigService {
+			getOrThrow(key: string): string {
+				return `value:${key}`;
+			}
+		}
+
+		function findFactoryProvider(
+			module: ReturnType<typeof AltchaModule.registerAsync>
+		): FactoryProvider | undefined {
+			return module.providers?.find(
+				(provider): provider is FactoryProvider =>
+					typeof provider === 'object' &&
+					provider !== null &&
+					'useFactory' in provider
+			);
+		}
+
+		// Regression test for issue #19: a useFactory declaring typed parameters
+		// for its injected providers must type-check without the
+		// `(...args: unknown[])` workaround.
+		test('accepts a useFactory with typed injected parameters', async () => {
+			const module = AltchaModule.registerAsync({
+				inject: [ConfigService],
+				useFactory: async (config: ConfigService) => ({
+					hmacSignatureSecret: config.getOrThrow(
+						'ALTCHA_HMAC_SIGNATURE_SECRET'
+					),
+					createChallengeParameters: () => ({
+						algorithm: 'PBKDF2/SHA-256' as const,
+						cost: 10,
+					}),
+					deriveKey,
+				}),
+			});
+			const factoryProvider = findFactoryProvider(module);
+			expect(factoryProvider?.inject).toEqual([ConfigService]);
+			const options = await factoryProvider?.useFactory(new ConfigService());
+			expect(options).toMatchObject({
+				hmacSignatureSecret: 'value:ALTCHA_HMAC_SIGNATURE_SECRET',
+			});
+		});
+
+		test('accepts a useFactory with multiple typed parameters', () => {
+			const module = AltchaModule.registerAsync({
+				inject: [ConfigService, 'ALTCHA_TOKEN'],
+				useFactory: (config: ConfigService, token: string) => ({
+					hmacSignatureSecret: config.getOrThrow(token),
+					createChallengeParameters: () => ({
+						algorithm: 'PBKDF2/SHA-256' as const,
+						cost: 10,
+					}),
+					deriveKey,
+				}),
+			});
+			expect(findFactoryProvider(module)?.inject).toEqual([
+				ConfigService,
+				'ALTCHA_TOKEN',
+			]);
+		});
+
+		test('still accepts a zero-argument useFactory', () => {
+			const module = AltchaModule.registerAsync({
+				useFactory: () => baseOptions(),
+			});
+			expect(module.module).toBe(AltchaModule);
+			expect(findFactoryProvider(module)?.inject).toEqual([]);
 		});
 	});
 });

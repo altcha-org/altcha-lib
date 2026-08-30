@@ -4,6 +4,25 @@ The NestJS plugin simplifies integrating ALTCHA into your application. It provid
 
 Works with both the Express and Fastify adapters. On Fastify, prefer the guard — see [Fastify adapter](#fastify-adapter) below.
 
+## Configuration
+
+Register the module synchronously with `AltchaModule.register(options)` or asynchronously with
+`AltchaModule.registerAsync({ useFactory, inject, imports })`.
+
+`registerAsync` infers the `useFactory` parameter types from `inject`, so injected providers can be
+typed directly on the factory signature:
+
+```ts
+AltchaModule.registerAsync({
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => ({
+    hmacSignatureSecret: config.getOrThrow('ALTCHA_HMAC_SIGNATURE_SECRET'),
+    createChallengeParameters: () => ({ algorithm: 'PBKDF2/SHA-256', cost: 5_000 }),
+    deriveKey,
+  }),
+});
+```
+
 ## Routes
 
 * `/challenge` — Generates a new challenge. Configure this endpoint as the widget’s `challenge` URL.
