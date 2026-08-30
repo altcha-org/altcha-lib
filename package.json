@@ -1,6 +1,6 @@
 {
   "name": "altcha-lib",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "description": "A lightweight library for creating and verifying ALTCHA challenges on the server.",
   "author": {
     "name": "Daniel Regeci",
