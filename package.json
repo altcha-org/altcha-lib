@@ -92,7 +92,7 @@
     }
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^10.0.1",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
@@ -100,6 +100,7 @@
     "@nestjs/common": "^11.1.16",
     "@nestjs/core": "^11.1.16",
     "@nestjs/platform-express": "^11.1.16",
+    "@nestjs/platform-fastify": "^11.1.16",
     "@sveltejs/kit": "^2.54.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
@@ -117,6 +118,7 @@
     "hono": "^4.12.14",
     "husky": "^9.1.7",
     "prettier": "^3.8.1",
+    "reflect-metadata": "^0.2.2",
     "rimraf": "^6.1.3",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
@@ -133,6 +135,7 @@
     "@nestjs/common": "^10.0.0 || ^11.0.0",
     "@nestjs/core": "^10.0.0 || ^11.0.0",
     "@nestjs/platform-express": "^10.0.0 || ^11.0.0",
+    "@nestjs/platform-fastify": "^10.0.0 || ^11.0.0",
     "@sveltejs/kit": "^2.0.0",
     "cookie-parser": "^1.0.0",
     "cors": "^2.0.0",
@@ -149,6 +152,9 @@
       "optional": true
     },
     "@nestjs/platform-express": {
+      "optional": true
+    },
+    "@nestjs/platform-fastify": {
       "optional": true
     },
     "@fastify/cookie": {
@@ -184,9 +190,8 @@
   },
   "overrides": {
     "cookie": "^1.1.1",
-		"esbuild": "^0.28.1",
+    "esbuild": "^0.28.1",
     "file-type": "^21.3.1",
-    "minimatch": "^10.2.5",
     "multer": "^2.2.0"
   }
 }

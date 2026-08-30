@@ -13,8 +13,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 var AltchaModule_1;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AltchaModule = exports.AltchaMiddleware = exports.AltchaController = exports.AltchaService = exports.Altcha = exports.randomInt = exports.deriveHmacKeySecret = exports.CappedMap = void 0;
+exports.AltchaModule = exports.AltchaGuard = exports.AltchaMiddleware = exports.AltchaController = exports.AltchaService = exports.Altcha = exports.randomInt = exports.deriveHmacKeySecret = exports.CappedMap = void 0;
 exports.createAltchaMiddleware = createAltchaMiddleware;
+exports.createAltchaGuard = createAltchaGuard;
 const common_1 = require("@nestjs/common");
 const helpers_js_1 = require("../helpers.js");
 Object.defineProperty(exports, "randomInt", { enumerable: true, get: function () { return helpers_js_1.randomInt; } });
@@ -24,6 +25,74 @@ Object.defineProperty(exports, "deriveHmacKeySecret", { enumerable: true, get: f
 const capped_map_js_1 = require("../capped-map.js");
 Object.defineProperty(exports, "CappedMap", { enumerable: true, get: function () { return capped_map_js_1.CappedMap; } });
 const ALTCHA_OPTIONS = Symbol('ALTCHA_OPTIONS');
+/**
+ * Reads request cookies without assuming a cookie-parser is installed.
+ * Prefers a parsed `cookies` object (Express `cookie-parser`, `@fastify/cookie`)
+ * and falls back to parsing the raw `Cookie` header otherwise.
+ */
+function readCookies(req) {
+    if (req.cookies && typeof req.cookies === 'object') {
+        return req.cookies;
+    }
+    const header = req.headers?.cookie;
+    const raw = Array.isArray(header) ? header.join('; ') : header;
+    if (!raw) {
+        return {};
+    }
+    const out = {};
+    for (const pair of raw.split(';')) {
+        const eq = pair.indexOf('=');
+        if (eq === -1) {
+            continue;
+        }
+        const key = pair.slice(0, eq).trim();
+        if (!key) {
+            continue;
+        }
+        const value = pair.slice(eq + 1).trim();
+        try {
+            out[key] = decodeURIComponent(value);
+        }
+        catch {
+            out[key] = value;
+        }
+    }
+    return out;
+}
+/**
+ * Clears the ALTCHA cookie regardless of the underlying HTTP adapter.
+ * Falls back to emitting an expiring `Set-Cookie` header when no framework
+ * helper is available (e.g. the raw `http.ServerResponse` seen by Fastify
+ * middleware).
+ */
+function clearAltchaCookie(res, name, path = '/') {
+    if (!res) {
+        return;
+    }
+    if (typeof res.clearCookie === 'function') {
+        res.clearCookie(name, { path: path || '/' });
+        return;
+    }
+    const cookie = `${name}=; Path=${path || '/'}; Max-Age=0`;
+    if (typeof res.header === 'function') {
+        res.header('Set-Cookie', cookie);
+        return;
+    }
+    if (typeof res.setHeader === 'function') {
+        const existing = typeof res.getHeader === 'function'
+            ? res.getHeader('Set-Cookie')
+            : undefined;
+        if (Array.isArray(existing)) {
+            res.setHeader('Set-Cookie', [...existing, cookie]);
+        }
+        else if (typeof existing === 'string' && existing) {
+            res.setHeader('Set-Cookie', [existing, cookie]);
+        }
+        else {
+            res.setHeader('Set-Cookie', cookie);
+        }
+    }
+}
 exports.Altcha = (0, common_1.createParamDecorator)((_data, ctx) => {
     const request = ctx.switchToHttp().getRequest();
     return request.altcha;
@@ -35,17 +104,7 @@ function createAltchaMiddleware(options = {}) {
             this.altchaService = altchaService;
         }
         async use(req, res, next) {
-            const payload = this.altchaService.getPayloadFromRequest(req);
-            const { error, payload: resultPayload, verification, } = await this.altchaService.verify(payload, { allowRemote: true });
-            req.altcha = {
-                error,
-                payload: resultPayload,
-                verification,
-            };
-            const setCookie = this.altchaService.setCookie;
-            if (setCookie) {
-                res.clearCookie(setCookie.name);
-            }
+            const { error } = await this.altchaService.attachResult(req, res);
             if (error && throwOnFailure) {
                 throw new common_1.HttpException(error, common_1.HttpStatus.BAD_REQUEST);
             }
@@ -57,6 +116,37 @@ function createAltchaMiddleware(options = {}) {
         __metadata("design:paramtypes", [AltchaService])
     ], AltchaMiddleware);
     return AltchaMiddleware;
+}
+/**
+ * Guard variant of the ALTCHA middleware.
+ *
+ * Prefer this over {@link createAltchaMiddleware} when running on the Fastify
+ * adapter: Fastify middleware runs before the body is parsed, so a payload sent
+ * in the request body is not visible to middleware. Guards run after body
+ * parsing on every adapter, so body- and cookie-delivered payloads both work.
+ */
+function createAltchaGuard(options = {}) {
+    const { throwOnFailure = true } = options;
+    let AltchaGuard = class AltchaGuard {
+        constructor(altchaService) {
+            this.altchaService = altchaService;
+        }
+        async canActivate(context) {
+            const http = context.switchToHttp();
+            const req = http.getRequest();
+            const res = http.getResponse();
+            const { error } = await this.altchaService.attachResult(req, res);
+            if (error && throwOnFailure) {
+                throw new common_1.HttpException(error, common_1.HttpStatus.BAD_REQUEST);
+            }
+            return true;
+        }
+    };
+    AltchaGuard = __decorate([
+        (0, common_1.Injectable)(),
+        __metadata("design:paramtypes", [AltchaService])
+    ], AltchaGuard);
+    return AltchaGuard;
 }
 let AltchaService = class AltchaService {
     constructor(options) {
@@ -92,12 +182,32 @@ let AltchaService = class AltchaService {
     }
     getPayloadFromRequest(req, cookieName) {
         if (cookieName) {
-            return req.cookies?.[cookieName];
+            return readCookies(req)[cookieName];
         }
-        return req.body?.[this.fieldName];
+        const value = req.body?.[this.fieldName];
+        return typeof value === 'string' ? value : undefined;
     }
     async verify(payload, options = {}) {
         return (0, shared_js_1.verify)(payload, this.deriveKey, this.hmacSignatureSecret, this.hmacKeySignatureSecret, this.store, options.allowRemote ? this.verifyServerOptions : undefined);
+    }
+    /**
+     * Verifies the payload carried by `req` (body field or configured cookie),
+     * stores the outcome on `req.altcha`, and clears the ALTCHA cookie on `res`
+     * when a cookie is configured. Shared by the middleware and the guard.
+     */
+    async attachResult(req, res) {
+        const payload = this.getPayloadFromRequest(req, this.setCookie?.name);
+        const { error, payload: resultPayload, verification, } = await this.verify(payload, { allowRemote: true });
+        const result = {
+            error,
+            payload: resultPayload,
+            verification,
+        };
+        req.altcha = result;
+        if (this.setCookie) {
+            clearAltchaCookie(res, this.setCookie.name, this.setCookie.path);
+        }
+        return result;
     }
 };
 exports.AltchaService = AltchaService;
@@ -142,17 +252,7 @@ let AltchaMiddleware = class AltchaMiddleware {
         this.altchaService = altchaService;
     }
     async use(req, res, next) {
-        const payload = this.altchaService.getPayloadFromRequest(req, this.altchaService.setCookie?.name);
-        const { error, payload: resultPayload, verification, } = await this.altchaService.verify(payload, { allowRemote: true });
-        req.altcha = {
-            error,
-            payload: resultPayload,
-            verification,
-        };
-        const setCookie = this.altchaService.setCookie;
-        if (setCookie) {
-            res.clearCookie(setCookie.name);
-        }
+        const { error } = await this.altchaService.attachResult(req, res);
         if (error) {
             throw new common_1.HttpException(error, common_1.HttpStatus.BAD_REQUEST);
         }
@@ -164,6 +264,26 @@ exports.AltchaMiddleware = AltchaMiddleware = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [AltchaService])
 ], AltchaMiddleware);
+let AltchaGuard = class AltchaGuard {
+    constructor(altchaService) {
+        this.altchaService = altchaService;
+    }
+    async canActivate(context) {
+        const http = context.switchToHttp();
+        const req = http.getRequest();
+        const res = http.getResponse();
+        const { error } = await this.altchaService.attachResult(req, res);
+        if (error) {
+            throw new common_1.HttpException(error, common_1.HttpStatus.BAD_REQUEST);
+        }
+        return true;
+    }
+};
+exports.AltchaGuard = AltchaGuard;
+exports.AltchaGuard = AltchaGuard = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [AltchaService])
+], AltchaGuard);
 let AltchaModule = AltchaModule_1 = class AltchaModule {
     static register(options) {
         return {
@@ -175,8 +295,10 @@ let AltchaModule = AltchaModule_1 = class AltchaModule {
                     useValue: options,
                 },
                 AltchaService,
+                AltchaMiddleware,
+                AltchaGuard,
             ],
-            exports: [AltchaService, AltchaMiddleware],
+            exports: [AltchaService, AltchaMiddleware, AltchaGuard],
         };
     }
     static registerAsync(asyncOptions) {
@@ -192,8 +314,9 @@ let AltchaModule = AltchaModule_1 = class AltchaModule {
                 },
                 AltchaService,
                 AltchaMiddleware,
+                AltchaGuard,
             ],
-            exports: [AltchaService, AltchaMiddleware],
+            exports: [AltchaService, AltchaMiddleware, AltchaGuard],
         };
     }
 };
