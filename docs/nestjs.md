@@ -4,6 +4,19 @@ The NestJS plugin simplifies integrating ALTCHA into your application. It provid
 
 Works with both the Express and Fastify adapters. On Fastify, prefer the guard — see [Fastify adapter](#fastify-adapter) below.
 
+## Requirements
+
+Supports NestJS 10, 11 and 12 on both the Express and Fastify adapters.
+
+NestJS 12 ships its core packages as ESM and requires Node.js 20.19+, 22.12+ or newer. CommonJS
+applications can still `require()` this integration on those Node versions; nothing in the
+integration needs to change when moving from NestJS 11 to 12.
+
+The ALTCHA providers declare their dependencies with explicit `@Inject()` tokens, so they resolve
+correctly under builders that do not emit `design:paramtypes` metadata (esbuild, or SWC without
+`decoratorMetadata` enabled). Your own controllers and providers still follow whatever NestJS
+requires of them.
+
 ## Configuration
 
 Register the module synchronously with `AltchaModule.register(options)` or asynchronously with

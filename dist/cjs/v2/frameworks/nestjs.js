@@ -113,6 +113,7 @@ function createAltchaMiddleware(options = {}) {
     };
     AltchaMiddleware = __decorate([
         (0, common_1.Injectable)(),
+        __param(0, (0, common_1.Inject)(AltchaService)),
         __metadata("design:paramtypes", [AltchaService])
     ], AltchaMiddleware);
     return AltchaMiddleware;
@@ -144,6 +145,7 @@ function createAltchaGuard(options = {}) {
     };
     AltchaGuard = __decorate([
         (0, common_1.Injectable)(),
+        __param(0, (0, common_1.Inject)(AltchaService)),
         __metadata("design:paramtypes", [AltchaService])
     ], AltchaGuard);
     return AltchaGuard;
@@ -245,6 +247,7 @@ __decorate([
 ], AltchaController.prototype, "verifySolution", null);
 exports.AltchaController = AltchaController = __decorate([
     (0, common_1.Controller)('altcha'),
+    __param(0, (0, common_1.Inject)(AltchaService)),
     __metadata("design:paramtypes", [AltchaService])
 ], AltchaController);
 let AltchaMiddleware = class AltchaMiddleware {
@@ -262,6 +265,7 @@ let AltchaMiddleware = class AltchaMiddleware {
 exports.AltchaMiddleware = AltchaMiddleware;
 exports.AltchaMiddleware = AltchaMiddleware = __decorate([
     (0, common_1.Injectable)(),
+    __param(0, (0, common_1.Inject)(AltchaService)),
     __metadata("design:paramtypes", [AltchaService])
 ], AltchaMiddleware);
 let AltchaGuard = class AltchaGuard {
@@ -282,6 +286,7 @@ let AltchaGuard = class AltchaGuard {
 exports.AltchaGuard = AltchaGuard;
 exports.AltchaGuard = AltchaGuard = __decorate([
     (0, common_1.Injectable)(),
+    __param(0, (0, common_1.Inject)(AltchaService)),
     __metadata("design:paramtypes", [AltchaService])
 ], AltchaGuard);
 let AltchaModule = AltchaModule_1 = class AltchaModule {

@@ -185,7 +185,9 @@ export function createAltchaMiddleware(options: AltchaMiddlewareOptions = {}) {
 
 	@Injectable()
 	class AltchaMiddleware implements NestMiddleware {
-		constructor(public readonly altchaService: AltchaService) {}
+		constructor(
+			@Inject(AltchaService) public readonly altchaService: AltchaService
+		) {}
 
 		async use(req: AltchaRequest, res: AltchaResponse, next: NextFunction) {
 			const { error } = await this.altchaService.attachResult(req, res);
@@ -212,7 +214,9 @@ export function createAltchaGuard(options: AltchaMiddlewareOptions = {}) {
 
 	@Injectable()
 	class AltchaGuard implements CanActivate {
-		constructor(public readonly altchaService: AltchaService) {}
+		constructor(
+			@Inject(AltchaService) public readonly altchaService: AltchaService
+		) {}
 
 		async canActivate(context: ExecutionContext): Promise<boolean> {
 			const http = context.switchToHttp();
@@ -332,7 +336,9 @@ export class AltchaService {
 
 @Controller('altcha')
 export class AltchaController {
-	constructor(private readonly altchaService: AltchaService) {}
+	constructor(
+		@Inject(AltchaService) private readonly altchaService: AltchaService
+	) {}
 
 	@Get('challenge')
 	@Header('Cache-Control', 'no-store')
@@ -349,7 +355,9 @@ export class AltchaController {
 
 @Injectable()
 export class AltchaMiddleware implements NestMiddleware {
-	constructor(private readonly altchaService: AltchaService) {}
+	constructor(
+		@Inject(AltchaService) private readonly altchaService: AltchaService
+	) {}
 	async use(req: AltchaRequest, res: AltchaResponse, next: NextFunction) {
 		const { error } = await this.altchaService.attachResult(req, res);
 		if (error) {
@@ -361,7 +369,9 @@ export class AltchaMiddleware implements NestMiddleware {
 
 @Injectable()
 export class AltchaGuard implements CanActivate {
-	constructor(private readonly altchaService: AltchaService) {}
+	constructor(
+		@Inject(AltchaService) private readonly altchaService: AltchaService
+	) {}
 	async canActivate(context: ExecutionContext): Promise<boolean> {
 		const http = context.switchToHttp();
 		const req = http.getRequest<AltchaRequest>();

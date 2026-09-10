@@ -2,6 +2,9 @@ import 'reflect-metadata';
 import { describe, expect, test, vi } from 'vitest';
 import type { FactoryProvider } from '@nestjs/common';
 import {
+	AltchaController,
+	AltchaGuard,
+	AltchaMiddleware,
 	AltchaModule,
 	AltchaService,
 	createAltchaGuard,
@@ -298,6 +301,35 @@ describe('NestJS', () => {
 			const next = vi.fn();
 			await middleware.use({ body: {} }, {}, next);
 			expect(next).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe('dependency injection metadata', () => {
+		// NestJS resolves constructor dependencies from `design:paramtypes`, which
+		// only TypeScript's `emitDecoratorMetadata` produces. Builders that
+		// transpile without it (esbuild, and SWC unless `decoratorMetadata` is
+		// enabled) drop that metadata, so every injected constructor parameter
+		// carries an explicit `@Inject()` token instead.
+		const SELF_DECLARED_DEPS_METADATA = 'self:paramtypes';
+
+		function selfDeclaredDeps(target: unknown) {
+			return (
+				(Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, target as object) as
+					| { index: number; param: unknown }[]
+					| undefined) ?? []
+			);
+		}
+
+		test.each([
+			['AltchaController', AltchaController],
+			['AltchaMiddleware', AltchaMiddleware],
+			['AltchaGuard', AltchaGuard],
+			['createAltchaMiddleware()', createAltchaMiddleware()],
+			['createAltchaGuard()', createAltchaGuard()],
+		])('%s injects AltchaService by explicit token', (_name, target) => {
+			expect(selfDeclaredDeps(target)).toEqual([
+				{ index: 0, param: AltchaService },
+			]);
 		});
 	});
 
