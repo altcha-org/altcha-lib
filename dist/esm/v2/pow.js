@@ -32,13 +32,14 @@ export class PasswordBuffer {
     }
 }
 /**
- * Creates a new proof-of-work challenge.
+ * Builds unsigned challenge parameters with a random nonce and salt.
  *
- * Generates random nonce and salt, optionally pre-computes a key prefix
- * from a known counter value, and optionally signs the challenge with HMAC.
+ * In deterministic mode (`counter` set), derives the key for that counter,
+ * sets `keyPrefix` from it and returns the derived key. Internal: shared by
+ * `createChallenge` and `obfuscate`, not exported from the package entry point.
  */
-export async function createChallenge(options) {
-    const { algorithm, counter, counterMode = 'uint32', cost, deriveKey, data, expiresAt, hmacAlgorithm = HmacAlgorithm.SHA_256, hmacKeySignatureSecret, hmacSignatureSecret, keyLength = 32, keyPrefix = '00', keyPrefixLength = keyLength / 2, memoryCost, parallelism, } = options;
+export async function deriveChallenge(options) {
+    const { algorithm, counter, counterMode = 'uint32', cost, deriveKey, data, expiresAt, keyLength = 32, keyPrefix = '00', keyPrefixLength = Math.floor(keyLength / 2), memoryCost, parallelism, } = options;
     const parameters = {
         algorithm,
         nonce: bufferToHex(crypto.getRandomValues(new Uint8Array(16))),
@@ -53,23 +54,41 @@ export async function createChallenge(options) {
             : expiresAt,
         data,
     };
-    // If a counter is provided, derive the key and extract the prefix the solver must match.
-    let deriveKeyResult = null;
-    if (counter !== undefined) {
-        const nonceBuf = hexToBuffer(parameters.nonce);
-        deriveKeyResult = await deriveKey(parameters, hexToBuffer(parameters.salt), new PasswordBuffer(nonceBuf, counterMode).setCounter(counter));
-        if (deriveKeyResult.parameters) {
-            Object.assign(parameters, deriveKeyResult.parameters);
-        }
-        parameters.keyPrefix = bufferToHex(deriveKeyResult.derivedKey.slice(0, keyPrefixLength));
+    if (counter === undefined) {
+        return { parameters, derivedKey: null };
     }
+    // Deterministic mode: derive the key and extract the prefix the solver must match.
+    if (!Number.isInteger(keyPrefixLength) || keyPrefixLength < 1) {
+        throw new Error(`keyPrefixLength must be a positive integer. Got: ${keyPrefixLength} (keyLength: ${keyLength}).`);
+    }
+    const deriveKeyResult = await deriveKey(parameters, hexToBuffer(parameters.salt), new PasswordBuffer(hexToBuffer(parameters.nonce), counterMode).setCounter(counter));
+    if (deriveKeyResult.parameters) {
+        Object.assign(parameters, deriveKeyResult.parameters);
+    }
+    const { derivedKey } = deriveKeyResult;
+    // A prefix covering the whole key would let the key signature be satisfied without any work.
+    if (keyPrefixLength >= derivedKey.length) {
+        throw new Error(`keyPrefixLength (${keyPrefixLength}) must be less than the derived key length (${derivedKey.length} bytes).`);
+    }
+    parameters.keyPrefix = bufferToHex(derivedKey.slice(0, Math.min(keyPrefixLength, Math.floor(derivedKey.length / 2))));
+    return { parameters, derivedKey };
+}
+/**
+ * Creates a new proof-of-work challenge.
+ *
+ * Generates random nonce and salt, optionally pre-computes a key prefix
+ * from a known counter value, and optionally signs the challenge with HMAC.
+ */
+export async function createChallenge(options) {
+    const { hmacAlgorithm = HmacAlgorithm.SHA_256, hmacKeySignatureSecret, hmacSignatureSecret, } = options;
+    const { parameters, derivedKey } = await deriveChallenge(options);
     // Return unsigned challenge if no HMAC secret is provided.
     if (!hmacSignatureSecret) {
         return {
             parameters: sortKeys(parameters),
         };
     }
-    return signChallenge(hmacAlgorithm, parameters, deriveKeyResult?.derivedKey, hmacSignatureSecret, hmacKeySignatureSecret);
+    return signChallenge(hmacAlgorithm, parameters, derivedKey, hmacSignatureSecret, hmacKeySignatureSecret);
 }
 /**
  * Solves a challenge by brute-forcing counter values until the derived key

@@ -13,6 +13,7 @@ import {
 	hexToBuffer,
 } from '../../src/v2/helpers.js';
 import * as pbkdf2 from '../../src/v2/algorithms/pbkdf2.js';
+import * as sha from '../../src/v2/algorithms/sha.js';
 import {
 	Challenge,
 	CreateChallengeOptions,
@@ -205,6 +206,54 @@ describe('pow', () => {
 			expect(result.parameters.keyPrefix.length).toEqual(32);
 			expect(result.parameters.keySignature?.length).toEqual(64);
 			expect(result.signature?.length).toEqual(64);
+		});
+
+		test.each([
+			{ keyPrefixLength: 32 },
+			{ keyPrefixLength: 64 },
+			{ keyPrefixLength: 0 },
+			{ keyPrefixLength: -1 },
+			{ keyPrefixLength: 1.5 },
+			{ keyLength: 1 },
+		])(
+			'should reject a key prefix that is empty or covers the whole key (%o)',
+			async (options) => {
+				await expect(
+					createChallenge({
+						algorithm: 'PBKDF2/SHA-256',
+						cost: 1,
+						counter: 1,
+						deriveKey: pbkdf2.deriveKey,
+						hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+						hmacKeySignatureSecret: HMAC_KEY_SECRET,
+						...options,
+					})
+				).rejects.toThrow(/keyPrefixLength/);
+			}
+		);
+
+		test('should reject a default prefix covering a derived key shorter than keyLength', async () => {
+			// SHA-256 yields 32 bytes even when keyLength is 64, so the default prefix (32) is the whole key.
+			await expect(
+				createChallenge({
+					algorithm: 'SHA-256',
+					cost: 1,
+					counter: 1,
+					deriveKey: sha.deriveKey,
+					keyLength: 64,
+				})
+			).rejects.toThrow(/derived key length \(32 bytes\)/);
+		});
+
+		test('should cap keyPrefixLength at half the derived key', async () => {
+			const result = await createChallenge({
+				algorithm: 'PBKDF2/SHA-256',
+				cost: 1,
+				counter: 1,
+				deriveKey: pbkdf2.deriveKey,
+				keyPrefixLength: 24,
+			});
+			expect(result.parameters.keyPrefix.length).toEqual(32);
 		});
 	});
 

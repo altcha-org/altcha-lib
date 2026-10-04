@@ -77,7 +77,8 @@ export interface CreateChallengeOptions {
     keyPrefix?: string;
     /**
      * Number of bytes from the derived key used as the prefix in deterministic mode.
-     * Defaults to `keyLength / 2`.
+     * Defaults to `floor(keyLength / 2)`. Must be a positive integer smaller than the
+     * derived key length (throws otherwise); values above half the derived key are capped at half.
      */
     keyPrefixLength?: number;
     /**

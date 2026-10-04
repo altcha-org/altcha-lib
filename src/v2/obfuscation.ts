@@ -1,13 +1,12 @@
 import { deriveKey as derivedKeyPBKDF2 } from './algorithms/pbkdf2.js';
 import {
-	createChallenge,
+	deriveChallenge,
 	solveChallenge,
 	solveChallengeWorkers,
 } from './pow.js';
 import { bufferToHex, hexToBuffer } from './helpers.js';
 import {
 	type Challenge,
-	type ChallengeParameters,
 	type CreateChallengeOptions,
 	type DeriveKeyFunction,
 	type Solution,
@@ -102,18 +101,21 @@ export async function obfuscate(
 	const { deriveKey = derivedKeyPBKDF2 } = options;
 	const counterMin = options?.counterMin || 20;
 	const counterMax = options?.counterMax || 200;
-	const { parameters } = await createChallenge({
+	const { parameters, derivedKey } = await deriveChallenge({
 		algorithm: 'PBKDF2/SHA-256',
 		cost: 5000,
 		deriveKey,
 		counter:
 			Math.floor(Math.random() * (counterMax - counterMin + 1)) + counterMin,
-		keyPrefixLength: 32,
 		...options,
 	});
+	if (!derivedKey) {
+		throw new Error('A counter is required to obfuscate data.');
+	}
+	// The full derived key is the AES key; `parameters.keyPrefix` exposes only part of it.
 	const key = await crypto.subtle.importKey(
 		'raw',
-		hexToBuffer(parameters.keyPrefix) as Uint8Array<ArrayBuffer>,
+		derivedKey as Uint8Array<ArrayBuffer>,
 		{ name: 'AES-GCM' },
 		false,
 		['encrypt']
@@ -126,11 +128,7 @@ export async function obfuscate(
 	);
 	return btoa(
 		JSON.stringify({
-			parameters: {
-				...parameters,
-				// Return only half the derived key
-				keyPrefix: parameters.keyPrefix.slice(0, parameters.keyLength || 32),
-			} satisfies ChallengeParameters,
+			parameters,
 			cipher: {
 				iv: bufferToHex(iv),
 				data: bufferToHex(data),

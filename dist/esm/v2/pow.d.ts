@@ -19,6 +19,17 @@ export declare class PasswordBuffer {
     setCounter(n: number): Uint8Array<ArrayBufferLike>;
 }
 /**
+ * Builds unsigned challenge parameters with a random nonce and salt.
+ *
+ * In deterministic mode (`counter` set), derives the key for that counter,
+ * sets `keyPrefix` from it and returns the derived key. Internal: shared by
+ * `createChallenge` and `obfuscate`, not exported from the package entry point.
+ */
+export declare function deriveChallenge(options: CreateChallengeOptions): Promise<{
+    parameters: ChallengeParameters;
+    derivedKey: Uint8Array | null;
+}>;
+/**
  * Creates a new proof-of-work challenge.
  *
  * Generates random nonce and salt, optionally pre-computes a key prefix

@@ -142,7 +142,7 @@ Creates a new proof-of-work challenge. Generates a random nonce and salt, option
 | `hmacSignatureSecret` | `string?` | HMAC secret for signing the challenge payload. |
 | `keyLength` | `number?` | Derived key length in bytes. Defaults to `32`. |
 | `keyPrefix` | `string?` | Required prefix the derived key must match. |
-| `keyPrefixLength` | `number?` | Number of bytes used as prefix in deterministic mode. Defaults to `keyLength / 2`. |
+| `keyPrefixLength` | `number?` | Number of bytes used as prefix in deterministic mode. Defaults to `floor(keyLength / 2)`. Must be a positive integer smaller than the derived key length (throws otherwise); capped at half the derived key. |
 | `memoryCost` | `number?` | Memory cost in KiB (Argon2id/scrypt only). |
 | `parallelism` | `number?` | Parallelism setting (Argon2id/scrypt only). |
 
