@@ -138,8 +138,8 @@ Creates a new proof-of-work challenge. Generates a random nonce and salt, option
 | `data` | `Record<string, ...>?` | Arbitrary metadata embedded in the challenge. |
 | `expiresAt` | `number \| Date?` | Expiry timestamp (seconds) or Date. |
 | `hmacAlgorithm` | `HmacAlgorithm?` | HMAC digest algorithm: `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
-| `hmacKeySignatureSecret` | `string?` | HMAC secret for signing derived keys (deterministic mode). |
-| `hmacSignatureSecret` | `string?` | HMAC secret for signing the challenge payload. |
+| `hmacKeySignatureSecret` | `string?` | HMAC secret for signing derived keys (deterministic mode). Requires `hmacSignatureSecret`. Throws if empty. |
+| `hmacSignatureSecret` | `string?` | HMAC secret for signing the challenge payload. Omit to create an unsigned challenge; throws if empty or `null`. |
 | `keyLength` | `number?` | Derived key length in bytes. Defaults to `32`. |
 | `keyPrefix` | `string?` | Required prefix the derived key must match. Defaults to `'00'`. Must not be empty (throws otherwise). Replaced by the derived prefix when `counter` is set. |
 | `keyPrefixLength` | `number?` | Number of bytes used as prefix in deterministic mode. Defaults to `floor(keyLength / 2)`. Must be a positive integer smaller than the derived key length (throws otherwise); capped at half the derived key. |
@@ -182,11 +182,11 @@ Verifies a submitted solution against a challenge. Checks expiration, challenge 
 |---|---|---|
 | `challenge` | `Challenge` | The original challenge. |
 | `solution` | `Solution` | The solution to verify. |
-| `hmacSignatureSecret` | `string` | HMAC secret used when the challenge was created. |
+| `hmacSignatureSecret` | `string` | HMAC secret used when the challenge was created. Throws if missing or empty. |
 | `deriveKey` | `DeriveKeyFunction` | Key derivation function. |
 | `counterMode` | `'uint32' \| 'string'?` | Counter encoding format. |
 | `hmacAlgorithm` | `HmacAlgorithm?` | HMAC digest algorithm: `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
-| `hmacKeySignatureSecret` | `string?` | HMAC secret for verifying derived-key signatures. |
+| `hmacKeySignatureSecret` | `string?` | HMAC secret for verifying derived-key signatures. Throws if empty. |
 
 Returns `VerifySolutionResult`:
 
@@ -216,7 +216,7 @@ Verifies a server signature payload from ALTCHA Sentinel.
 | Option | Type | Description |
 |---|---|---|
 | `payload` | `ServerSignaturePayload` | The payload to verify. |
-| `hmacSecret` | `string` | The HMAC secret. |
+| `hmacSecret` | `string` | The HMAC secret. Throws if missing or empty. |
 
 Throws if `payload.algorithm` is not exactly `'SHA-1'`, `'SHA-256'`, `'SHA-384'` or `'SHA-512'`. The algorithm is not covered by the signature, so it is validated before use. SHA-1 is accepted because Sentinel signs v1 challenges with the challenge's own algorithm.
 

@@ -12,6 +12,16 @@ export function assertAlgorithm<T extends string>(
 	}
 }
 
+/** Throws unless `secret` is a non-empty string. */
+export function assertSecret(
+	name: string,
+	secret: unknown
+): asserts secret is string {
+	if (typeof secret !== 'string' || secret === '') {
+		throw new Error(`${name} must be a non-empty string.`);
+	}
+}
+
 /** Checks if a buffer starts with the given prefix bytes. */
 export function bufferStartsWith(buffer: Uint8Array, prefix: Uint8Array) {
 	if (prefix.length > buffer.length) {

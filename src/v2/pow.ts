@@ -1,5 +1,6 @@
 import {
 	assertAlgorithm,
+	assertSecret,
 	bufferStartsWith,
 	bufferToHex,
 	canonicalJSON,
@@ -147,6 +148,8 @@ export async function deriveChallenge(
  *
  * Generates random nonce and salt, optionally pre-computes a key prefix
  * from a known counter value, and optionally signs the challenge with HMAC.
+ * Omitting `hmacSignatureSecret` creates an unsigned challenge; an empty or `null`
+ * secret throws, as does `hmacKeySignatureSecret` without `hmacSignatureSecret`.
  */
 export async function createChallenge(
 	options: CreateChallengeOptions
@@ -157,10 +160,19 @@ export async function createChallenge(
 		hmacSignatureSecret,
 	} = options;
 	assertAlgorithm(hmacAlgorithm, HMAC_ALGORITHMS);
+	if (hmacSignatureSecret !== undefined) {
+		assertSecret('hmacSignatureSecret', hmacSignatureSecret);
+	}
+	if (hmacKeySignatureSecret !== undefined) {
+		assertSecret('hmacKeySignatureSecret', hmacKeySignatureSecret);
+		if (hmacSignatureSecret === undefined) {
+			throw new Error('hmacKeySignatureSecret requires hmacSignatureSecret.');
+		}
+	}
 	const { parameters, derivedKey } = await deriveChallenge(options);
 
 	// Return unsigned challenge if no HMAC secret is provided.
-	if (!hmacSignatureSecret) {
+	if (hmacSignatureSecret === undefined) {
 		return {
 			parameters: sortKeys(parameters),
 		};
@@ -384,6 +396,10 @@ export async function verifySolution(
 		solution,
 	} = options;
 	assertAlgorithm(hmacAlgorithm, HMAC_ALGORITHMS);
+	assertSecret('hmacSignatureSecret', hmacSignatureSecret);
+	if (hmacKeySignatureSecret !== undefined) {
+		assertSecret('hmacKeySignatureSecret', hmacKeySignatureSecret);
+	}
 	const start = performance.now();
 
 	// 1. Check expiration.

@@ -279,6 +279,29 @@ describe('pow', () => {
 				})
 			).rejects.toThrow('Unsupported algorithm: SHA-1');
 		});
+
+		test.each([
+			{ hmacSignatureSecret: '' },
+			{ hmacSignatureSecret: null },
+			{
+				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+				hmacKeySignatureSecret: '',
+			},
+			{ hmacKeySignatureSecret: HMAC_KEY_SECRET },
+		])(
+			'should reject empty, null or orphaned secrets (%o)',
+			async (secrets) => {
+				await expect(
+					createChallenge({
+						algorithm: 'PBKDF2/SHA-256',
+						cost: 1,
+						counter: 1,
+						deriveKey: pbkdf2.deriveKey,
+						...(secrets as Record<string, string>),
+					})
+				).rejects.toThrow(/hmac(Key)?SignatureSecret/);
+			}
+		);
 	});
 
 	describe('solveChallenge()', () => {
@@ -385,6 +408,26 @@ describe('pow', () => {
 					solution,
 				})
 			).rejects.toThrow('Unsupported algorithm: SHA-1');
+		});
+
+		test.each([
+			{ hmacSignatureSecret: '' },
+			{ hmacSignatureSecret: null },
+			{ hmacSignatureSecret: undefined },
+			{
+				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+				hmacKeySignatureSecret: '',
+			},
+		])('should throw for an empty or missing secret (%o)', async (secrets) => {
+			const { challenge, solution } = await solve();
+			await expect(
+				verifySolution({
+					challenge,
+					deriveKey: pbkdf2.deriveKey,
+					solution,
+					...(secrets as { hmacSignatureSecret: string }),
+				})
+			).rejects.toThrow(/hmac(Key)?SignatureSecret must be a non-empty string/);
 		});
 
 		test('should fail verification with invalid HMAC key', async () => {

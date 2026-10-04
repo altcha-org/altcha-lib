@@ -36,10 +36,10 @@ export function create(options: AltchaOptions) {
 	const challengeHandler = async <E extends Env, P extends string>(
 		c: Context<E, P>
 	) => {
-		if (!deriveKey || !createChallengeParameters) {
+		if (!deriveKey || !createChallengeParameters || !hmacSignatureSecret) {
 			throw new HTTPException(500, {
 				message:
-					'deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.',
+					'deriveKey, createChallengeParameters and hmacSignatureSecret are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.',
 			});
 		}
 		c.header('Cache-Control', 'no-store');

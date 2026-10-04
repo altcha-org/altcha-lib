@@ -103,10 +103,12 @@ interface CreateChallengeOptions {
   hmacAlgorithm?: HmacAlgorithm;
   /**
    * HMAC secret used to sign derived keys in deterministic mode.
+   * Requires `hmacSignatureSecret`. Throws if empty.
    */
   hmacKeySignatureSecret?: string;
   /**
    * HMAC secret used to sign the challenge payload.
+   * Omit to create an unsigned challenge; throws if empty or `null`.
    */
   hmacSignatureSecret?: string;
   /**

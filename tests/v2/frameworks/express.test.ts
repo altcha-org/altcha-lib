@@ -240,6 +240,21 @@ describe('Express', () => {
 				const res = await request(app).get('/challenge');
 				expect(res.status).toBe(500);
 			});
+
+			test('challengeHandler should fail instead of issuing unsigned challenges without hmacSignatureSecret', async () => {
+				const unsignedAltcha = create({
+					createChallengeParameters: () => ({
+						algorithm: 'PBKDF2/SHA-256',
+						cost: 10,
+					}),
+					deriveKey,
+				});
+				const app = express();
+				app.get('/challenge', unsignedAltcha.challengeHandler);
+				const res = await request(app).get('/challenge');
+				expect(res.status).toBe(500);
+				expect(res.body).not.toHaveProperty('parameters');
+			});
 		});
 	});
 });

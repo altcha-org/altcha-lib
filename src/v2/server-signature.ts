@@ -1,5 +1,6 @@
 import {
 	assertAlgorithm,
+	assertSecret,
 	bufferToHex,
 	constantTimeEqual,
 	hash,
@@ -74,6 +75,7 @@ export async function verifyServerSignature(options: {
 	const { hmacSecret, payload } = options;
 	// `algorithm` is not covered by the signature, so it must be validated before use.
 	assertAlgorithm(payload.algorithm, SERVER_SIGNATURE_ALGORITHMS);
+	assertSecret('hmacSecret', hmacSecret);
 	const start = performance.now();
 	const signature = bufferToHex(
 		await hmac(

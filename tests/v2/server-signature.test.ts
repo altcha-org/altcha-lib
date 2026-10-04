@@ -241,6 +241,23 @@ describe('Server Signature', () => {
 			}
 		);
 
+		test.each(['', null, undefined])(
+			'should throw for an empty or missing hmacSecret (%s)',
+			async (badSecret) => {
+				await expect(
+					verifyServerSignature({
+						hmacSecret: badSecret as string,
+						payload: {
+							algorithm,
+							signature: '00',
+							verificationData: 'verified=true',
+							verified: true,
+						},
+					})
+				).rejects.toThrow('hmacSecret must be a non-empty string.');
+			}
+		);
+
 		test('should verify a SHA-1 signature (Sentinel signs v1 challenges with their algorithm)', async () => {
 			const verificationData = 'verified=true';
 			const signature = bufferToHex(

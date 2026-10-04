@@ -59,10 +59,10 @@ export function create(options: AltchaOptions) {
 	} = options;
 
 	async function challengeHandler() {
-		if (!deriveKey || !createChallengeParameters) {
+		if (!deriveKey || !createChallengeParameters || !hmacSignatureSecret) {
 			error(
 				500,
-				'deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.'
+				'deriveKey, createChallengeParameters and hmacSignatureSecret are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.'
 			);
 		}
 		const challenge = await createChallenge({
