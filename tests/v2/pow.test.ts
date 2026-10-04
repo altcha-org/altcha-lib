@@ -255,6 +255,18 @@ describe('pow', () => {
 			});
 			expect(result.parameters.keyPrefix.length).toEqual(32);
 		});
+
+		test('should reject an empty keyPrefix', async () => {
+			await expect(
+				createChallenge({
+					algorithm: 'PBKDF2/SHA-256',
+					cost: 1,
+					deriveKey: pbkdf2.deriveKey,
+					hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+					keyPrefix: '',
+				})
+			).rejects.toThrow(/keyPrefix must not be empty/);
+		});
 	});
 
 	describe('solveChallenge()', () => {

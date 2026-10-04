@@ -100,6 +100,10 @@ export async function deriveChallenge(
 		data,
 	};
 	if (counter === undefined) {
+		// An empty prefix matches every key, so counter 0 would solve the challenge.
+		if (!keyPrefix) {
+			throw new Error('keyPrefix must not be empty.');
+		}
 		return { parameters, derivedKey: null };
 	}
 
