@@ -1,5 +1,17 @@
 import type { HmacAlgorithm } from './types.js';
 
+/** Throws unless `algorithm` is exactly one of `allowed`. */
+export function assertAlgorithm<T extends string>(
+	algorithm: unknown,
+	allowed: readonly T[]
+): asserts algorithm is T {
+	if (!allowed.includes(algorithm as T)) {
+		throw new Error(
+			`Unsupported algorithm: ${String(algorithm)}. Expected one of: ${allowed.join(', ')}.`
+		);
+	}
+}
+
 /** Checks if a buffer starts with the given prefix bytes. */
 export function bufferStartsWith(buffer: Uint8Array, prefix: Uint8Array) {
 	if (prefix.length > buffer.length) {

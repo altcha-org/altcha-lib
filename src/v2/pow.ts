@@ -1,4 +1,5 @@
 import {
+	assertAlgorithm,
 	bufferStartsWith,
 	bufferToHex,
 	canonicalJSON,
@@ -20,6 +21,8 @@ import {
 	type VerifySolutionResult,
 	HmacAlgorithm,
 } from './types.js';
+
+const HMAC_ALGORITHMS = Object.values(HmacAlgorithm);
 
 /**
  * Manages a buffer that combines a nonce with a counter value.
@@ -153,6 +156,7 @@ export async function createChallenge(
 		hmacKeySignatureSecret,
 		hmacSignatureSecret,
 	} = options;
+	assertAlgorithm(hmacAlgorithm, HMAC_ALGORITHMS);
 	const { parameters, derivedKey } = await deriveChallenge(options);
 
 	// Return unsigned challenge if no HMAC secret is provided.
@@ -379,6 +383,7 @@ export async function verifySolution(
 		hmacSignatureSecret,
 		solution,
 	} = options;
+	assertAlgorithm(hmacAlgorithm, HMAC_ALGORITHMS);
 	const start = performance.now();
 
 	// 1. Check expiration.

@@ -1,4 +1,5 @@
 import {
+	assertAlgorithm,
 	bufferToHex,
 	constantTimeEqual,
 	hash,
@@ -11,6 +12,12 @@ import {
 	type ServerSignatureVerificationData,
 	type VerifyServerSignatureResult,
 } from './types.js';
+
+/**
+ * Algorithms accepted for server signatures and fields hashes.
+ * SHA-1 is kept because Sentinel signs v1 challenges with the challenge's own algorithm.
+ */
+const SERVER_SIGNATURE_ALGORITHMS = ['SHA-1', ...Object.values(HmacAlgorithm)];
 
 export function parseVerificationData(
 	data: string,
@@ -50,6 +57,7 @@ export async function verifyFieldsHash(options: {
 	algorithm?: string;
 }): Promise<boolean> {
 	const { algorithm = 'SHA-256', formData, fields, fieldsHash } = options;
+	assertAlgorithm(algorithm, SERVER_SIGNATURE_ALGORITHMS);
 	const data: Record<string, unknown> =
 		formData instanceof FormData ? Object.fromEntries(formData) : formData;
 	const lines = [];
@@ -64,6 +72,8 @@ export async function verifyServerSignature(options: {
 	hmacSecret: string;
 }): Promise<VerifyServerSignatureResult> {
 	const { hmacSecret, payload } = options;
+	// `algorithm` is not covered by the signature, so it must be validated before use.
+	assertAlgorithm(payload.algorithm, SERVER_SIGNATURE_ALGORITHMS);
 	const start = performance.now();
 	const signature = bufferToHex(
 		await hmac(

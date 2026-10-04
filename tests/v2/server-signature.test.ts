@@ -83,6 +83,17 @@ describe('Server Signature', () => {
 				})
 			).toEqual(false);
 		});
+
+		test('should throw for an unsupported algorithm', async () => {
+			await expect(
+				verifyFieldsHash({
+					algorithm: 'MD5',
+					fields: ['a'],
+					fieldsHash: '',
+					formData: { a: '1' },
+				})
+			).rejects.toThrow('Unsupported algorithm: MD5');
+		});
 	});
 
 	describe('verifyServerSignature()', () => {
@@ -203,6 +214,52 @@ describe('Server Signature', () => {
 				verificationData: parseVerificationData(verificationData),
 				verified: false,
 			});
+		});
+
+		test.each(['MD5', 'sha-256', 'HS256', undefined])(
+			'should throw for an unsupported or missing algorithm (%s)',
+			async (badAlgorithm) => {
+				const verificationData = 'verified=true';
+				const signature = bufferToHex(
+					await hmac(
+						algorithm,
+						await hash(algorithm, verificationData),
+						hmacSecret
+					)
+				);
+				await expect(
+					verifyServerSignature({
+						hmacSecret,
+						payload: {
+							algorithm: badAlgorithm as string,
+							signature,
+							verificationData,
+							verified: true,
+						},
+					})
+				).rejects.toThrow(`Unsupported algorithm: ${badAlgorithm}`);
+			}
+		);
+
+		test('should verify a SHA-1 signature (Sentinel signs v1 challenges with their algorithm)', async () => {
+			const verificationData = 'verified=true';
+			const signature = bufferToHex(
+				await hmac(
+					'SHA-1' as HmacAlgorithm,
+					await hash('SHA-1', verificationData),
+					hmacSecret
+				)
+			);
+			const result = await verifyServerSignature({
+				hmacSecret,
+				payload: {
+					algorithm: 'SHA-1',
+					signature,
+					verificationData,
+					verified: true,
+				},
+			});
+			expect(result.verified).toBe(true);
 		});
 	});
 });

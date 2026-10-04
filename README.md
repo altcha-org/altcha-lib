@@ -137,7 +137,7 @@ Creates a new proof-of-work challenge. Generates a random nonce and salt, option
 | `counterMode` | `'uint32' \| 'string'` | Counter encoding format. Defaults to `'uint32'`. |
 | `data` | `Record<string, ...>?` | Arbitrary metadata embedded in the challenge. |
 | `expiresAt` | `number \| Date?` | Expiry timestamp (seconds) or Date. |
-| `hmacAlgorithm` | `HmacAlgorithm?` | HMAC digest algorithm. Defaults to `'SHA-256'`. |
+| `hmacAlgorithm` | `HmacAlgorithm?` | HMAC digest algorithm: `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
 | `hmacKeySignatureSecret` | `string?` | HMAC secret for signing derived keys (deterministic mode). |
 | `hmacSignatureSecret` | `string?` | HMAC secret for signing the challenge payload. |
 | `keyLength` | `number?` | Derived key length in bytes. Defaults to `32`. |
@@ -185,7 +185,7 @@ Verifies a submitted solution against a challenge. Checks expiration, challenge 
 | `hmacSignatureSecret` | `string` | HMAC secret used when the challenge was created. |
 | `deriveKey` | `DeriveKeyFunction` | Key derivation function. |
 | `counterMode` | `'uint32' \| 'string'?` | Counter encoding format. |
-| `hmacAlgorithm` | `HmacAlgorithm?` | HMAC digest algorithm. Defaults to `'SHA-256'`. |
+| `hmacAlgorithm` | `HmacAlgorithm?` | HMAC digest algorithm: `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
 | `hmacKeySignatureSecret` | `string?` | HMAC secret for verifying derived-key signatures. |
 
 Returns `VerifySolutionResult`:
@@ -207,7 +207,7 @@ Verifies the SHA hash of specified form fields.
 | `formData` | `FormData \| Record<string, unknown>` | The form data to verify. |
 | `fields` | `string[]` | Field names to include in the hash. |
 | `fieldsHash` | `string` | The expected hash value. |
-| `algorithm` | `string?` | Hash algorithm. Defaults to `'SHA-256'`. |
+| `algorithm` | `string?` | Hash algorithm: `'SHA-1'`, `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
 
 #### `verifyServerSignature(options): Promise<VerifyServerSignatureResult>`
 
@@ -217,6 +217,8 @@ Verifies a server signature payload from ALTCHA Sentinel.
 |---|---|---|
 | `payload` | `ServerSignaturePayload` | The payload to verify. |
 | `hmacSecret` | `string` | The HMAC secret. |
+
+Throws if `payload.algorithm` is not exactly `'SHA-1'`, `'SHA-256'`, `'SHA-384'` or `'SHA-512'`. The algorithm is not covered by the signature, so it is validated before use. SHA-1 is accepted because Sentinel signs v1 challenges with the challenge's own algorithm.
 
 Returns `VerifyServerSignatureResult` (extends `VerifySolutionResult`):
 
