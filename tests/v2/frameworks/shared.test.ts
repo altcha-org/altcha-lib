@@ -2,6 +2,9 @@ import { describe, expect, test, vi } from 'vitest';
 import { verify } from '../../../src/v2/frameworks/shared.js';
 import { deriveKey } from '../../../src/v2/algorithms/pbkdf2.js';
 import { createChallenge, solveChallenge } from '../../../src/v2/pow.js';
+import { CappedMap } from '../../../src/v2/capped-map.js';
+import { bufferToHex, hash, hmac } from '../../../src/v2/helpers.js';
+import { HmacAlgorithm } from '../../../src/v2/types.js';
 
 function jsonResponse(status: number, data: unknown) {
 	return new Response(JSON.stringify(data), {
@@ -117,6 +120,128 @@ describe('Shared', () => {
 				'deriveKey is required to verify self-hosted ALTCHA challenges.'
 			);
 			expect(result.verification).toBeNull();
+		});
+
+		describe('replay protection (server-signature payloads)', () => {
+			async function signServerPayload(verificationData: string) {
+				return {
+					algorithm: 'SHA-256',
+					id: 'unsigned_id',
+					signature: bufferToHex(
+						await hmac(
+							HmacAlgorithm.SHA_256,
+							await hash('SHA-256', verificationData),
+							hmacSignatureSecret
+						)
+					),
+					verificationData,
+					verified: true,
+				};
+			}
+
+			test('should reject a replay even when the unsigned top-level id is changed or removed', async () => {
+				const store = new CappedMap<string, boolean>({ maxSize: 100 });
+				const payload = await signServerPayload('id=chl_1&verified=true');
+				const { id: _, ...withoutId } = payload;
+				const first = await verify(
+					payload,
+					deriveKey,
+					hmacSignatureSecret,
+					undefined,
+					store
+				);
+				expect(first.error).toBeNull();
+				for (const replay of [
+					payload,
+					{ ...payload, id: 'other' },
+					withoutId,
+				]) {
+					const result = await verify(
+						replay,
+						deriveKey,
+						hmacSignatureSecret,
+						undefined,
+						store
+					);
+					expect(result.error).toBe('ALTCHA payload has been already used.');
+				}
+			});
+
+			test('should reject a verified payload without a signed id when a store is configured', async () => {
+				const store = new CappedMap<string, boolean>({ maxSize: 100 });
+				const payload = await signServerPayload('verified=true');
+				const result = await verify(
+					payload,
+					deriveKey,
+					hmacSignatureSecret,
+					undefined,
+					store
+				);
+				expect(result.error).toBe('ALTCHA payload is missing a signed id.');
+			});
+
+			test('should not consume the id of a payload that fails verification', async () => {
+				const store = new CappedMap<string, boolean>({ maxSize: 100 });
+				const payload = await signServerPayload('id=chl_1&verified=true');
+				const forged = await verify(
+					{ ...payload, signature: '00'.repeat(32) },
+					deriveKey,
+					hmacSignatureSecret,
+					undefined,
+					store
+				);
+				expect(forged.error).toBe('ALTCHA verification failed.');
+				const genuine = await verify(
+					payload,
+					deriveKey,
+					hmacSignatureSecret,
+					undefined,
+					store
+				);
+				expect(genuine.error).toBeNull();
+			});
+
+			test('should key remote (verifyServer) replays on the signed id', async () => {
+				const store = new CappedMap<string, boolean>({ maxSize: 100 });
+				const fetchMock = vi
+					.fn()
+					.mockImplementation(async () =>
+						jsonResponse(200, {
+							apiKey: 'key_1',
+							verificationData: null,
+							verified: true,
+						})
+					);
+				const options = {
+					fetch: fetchMock,
+					url: 'https://sentinel.example.com/v1/verify/signature',
+				};
+				const payload = {
+					algorithm: 'SHA-256',
+					id: 'unsigned_id',
+					signature: 'sig',
+					verificationData: 'id=chl_1&verified=true',
+					verified: true,
+				};
+				const first = await verify(
+					payload,
+					deriveKey,
+					undefined,
+					undefined,
+					store,
+					options
+				);
+				expect(first.error).toBeNull();
+				const replay = await verify(
+					{ ...payload, id: 'other' },
+					deriveKey,
+					undefined,
+					undefined,
+					store,
+					options
+				);
+				expect(replay.error).toBe('ALTCHA payload has been already used.');
+			});
 		});
 
 		describe('remote verification (verifyServer)', () => {

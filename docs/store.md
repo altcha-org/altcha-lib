@@ -52,4 +52,5 @@ const altcha = create({
 ## Implementation Notes
 
 * **Expiration:** When generating a challenge, use `expiresAt` to limit its validity. The store only needs to retain entries until the challenge expires. With Redis, use the `EX` parameter to set automatic key expiration.
-* **Key:** The default challenge identifier is the random `nonce`. A custom identifier can be provided by setting `challengeId` in the `data` field of `createChallenge`.
+* **Key:** For self-hosted challenges, the default challenge identifier is the random `nonce`. A custom identifier can be provided by setting `challengeId` in the `data` field of `createChallenge`.
+* **Server signatures (Sentinel):** The key is the `id` inside the signed `verificationData`. The unsigned top-level `id` is ignored. The store is checked only after the signature has been verified, and a verified payload without a signed `id` is rejected when a store is configured.

@@ -78,15 +78,12 @@ export async function verify(
 					hmacKeySignatureSecret
 				);
 				break;
-			case 'server':
-				challengeId = (payload as ServerSignaturePayload).id;
-				if (store && challengeId) {
-					await checkChallengeId(store, challengeId);
-				}
+			case 'server': {
+				const serverPayload = payload as ServerSignaturePayload;
 				if (verifyServerOptions) {
 					verification = await verifyServer({
 						...verifyServerOptions,
-						payload: payload as ServerSignaturePayload,
+						payload: serverPayload,
 					});
 				} else {
 					if (!hmacSignatureSecret) {
@@ -95,11 +92,23 @@ export async function verify(
 						);
 					}
 					verification = await verifyServerSignaturePayload(
-						payload as ServerSignaturePayload,
+						serverPayload,
 						hmacSignatureSecret
 					);
 				}
+				// The top-level `id` is not covered by the signature; only trust the `id`
+				// inside `verificationData`, and only once the signature has been verified.
+				if (store && verification.verified) {
+					const signedId = new URLSearchParams(
+						serverPayload.verificationData
+					).get('id');
+					if (!signedId) {
+						throw new Error('ALTCHA payload is missing a signed id.');
+					}
+					await checkChallengeId(store, signedId);
+				}
 				break;
+			}
 			default:
 				throw new Error('ALTCHA payload is invalid.');
 		}

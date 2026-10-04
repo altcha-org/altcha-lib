@@ -55,6 +55,10 @@ export async function deriveChallenge(options) {
         data,
     };
     if (counter === undefined) {
+        // An empty prefix matches every key, so counter 0 would solve the challenge.
+        if (!keyPrefix) {
+            throw new Error('keyPrefix must not be empty.');
+        }
         return { parameters, derivedKey: null };
     }
     // Deterministic mode: derive the key and extract the prefix the solver must match.
