@@ -14,5 +14,13 @@ class CappedMap extends Map {
         super.set(key, value);
         return this;
     }
+    /** Adds `key` unless it is present; returns `true` if it was added. Synchronous, hence atomic. */
+    setIfAbsent(key, value) {
+        if (this.has(key)) {
+            return false;
+        }
+        this.set(key, value);
+        return true;
+    }
 }
 exports.CappedMap = CappedMap;

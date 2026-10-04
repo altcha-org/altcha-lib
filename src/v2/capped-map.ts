@@ -14,4 +14,13 @@ export class CappedMap<K = unknown, V = unknown> extends Map {
 		super.set(key, value);
 		return this;
 	}
+
+	/** Adds `key` unless it is present; returns `true` if it was added. Synchronous, hence atomic. */
+	setIfAbsent(key: K, value: V) {
+		if (this.has(key)) {
+			return false;
+		}
+		this.set(key, value);
+		return true;
+	}
 }

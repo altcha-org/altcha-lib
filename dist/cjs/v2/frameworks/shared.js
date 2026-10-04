@@ -30,7 +30,6 @@ async function verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureS
     }
     const type = getPayloadType(payload);
     let verification = null;
-    let challengeId = null;
     try {
         switch (type) {
             case 'client':
@@ -40,11 +39,11 @@ async function verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureS
                 if (!hmacSignatureSecret) {
                     throw new Error('hmacSignatureSecret is required to verify self-hosted ALTCHA challenges.');
                 }
-                challengeId = getChallengeId(payload);
-                if (store && challengeId) {
-                    await checkChallengeId(store, challengeId);
-                }
                 verification = await verifyClientPayload(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret);
+                // Record the id only after verification, so unverified payloads cannot write to the store.
+                if (store && verification.verified) {
+                    await checkChallengeId(store, getChallengeId(payload));
+                }
                 break;
             case 'server': {
                 const serverPayload = payload;
@@ -96,7 +95,15 @@ async function verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureS
         verification,
     };
 }
+/** Marks `challengeId` as used, or throws if it already was. */
 async function checkChallengeId(store, challengeId) {
+    if (store.setIfAbsent) {
+        if (!(await store.setIfAbsent(challengeId, true))) {
+            throw new Error('ALTCHA payload has been already used.');
+        }
+        return;
+    }
+    // Not atomic: concurrent submissions of the same payload can both pass.
     if (await store.get(challengeId)) {
         throw new Error('ALTCHA payload has been already used.');
     }

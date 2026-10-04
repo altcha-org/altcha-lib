@@ -76,4 +76,10 @@ export type RequireField<T, K extends keyof T> = Omit<T, K> &
 export interface Store {
 	get: (key: string) => Promise<unknown> | unknown;
 	set: (key: string, value: boolean) => Promise<unknown> | unknown;
+	/**
+	 * Atomically stores `key` unless it already exists. Returns `true` if the key was added,
+	 * `false` if it was already present. When implemented, it is used instead of `get` + `set`,
+	 * which cannot prevent two concurrent submissions of the same payload from both passing.
+	 */
+	setIfAbsent?: (key: string, value: boolean) => Promise<boolean> | boolean;
 }

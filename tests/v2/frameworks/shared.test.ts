@@ -122,6 +122,75 @@ describe('Shared', () => {
 			expect(result.verification).toBeNull();
 		});
 
+		describe('replay protection (client payloads)', () => {
+			test('should not let unverified payloads evict used ids from a CappedMap', async () => {
+				const store = new CappedMap<string, boolean>({ maxSize: 10 });
+				const { payload } = await createPayload();
+				const first = await verify(
+					payload,
+					deriveKey,
+					hmacSignatureSecret,
+					undefined,
+					store
+				);
+				expect(first.error).toBeNull();
+				for (let i = 0; i < 10; i++) {
+					await verify(
+						{ challenge: { parameters: { nonce: `junk${i}` } }, solution: {} },
+						deriveKey,
+						hmacSignatureSecret,
+						undefined,
+						store
+					);
+				}
+				const replay = await verify(
+					payload,
+					deriveKey,
+					hmacSignatureSecret,
+					undefined,
+					store
+				);
+				expect(replay.error).toBe('ALTCHA payload has been already used.');
+			});
+
+			test('should not consume the id of a payload that fails verification', async () => {
+				const store = new CappedMap<string, boolean>({ maxSize: 10 });
+				const { challenge, payload, solution } = await createPayload();
+				const wrong = await verify(
+					{
+						challenge,
+						solution: { ...solution, counter: solution!.counter + 1 },
+					},
+					deriveKey,
+					hmacSignatureSecret,
+					undefined,
+					store
+				);
+				expect(wrong.error).toBe('ALTCHA verification failed.');
+				const genuine = await verify(
+					payload,
+					deriveKey,
+					hmacSignatureSecret,
+					undefined,
+					store
+				);
+				expect(genuine.error).toBeNull();
+			});
+
+			test('should accept only one of two concurrent submissions of the same payload', async () => {
+				const store = new CappedMap<string, boolean>({ maxSize: 10 });
+				const { payload } = await createPayload();
+				const results = await Promise.all([
+					verify(payload, deriveKey, hmacSignatureSecret, undefined, store),
+					verify(payload, deriveKey, hmacSignatureSecret, undefined, store),
+				]);
+				expect(results.map((r) => r.error).sort()).toEqual([
+					'ALTCHA payload has been already used.',
+					null,
+				]);
+			});
+		});
+
 		describe('replay protection (server-signature payloads)', () => {
 			async function signServerPayload(verificationData: string) {
 				return {
@@ -203,15 +272,13 @@ describe('Shared', () => {
 
 			test('should key remote (verifyServer) replays on the signed id', async () => {
 				const store = new CappedMap<string, boolean>({ maxSize: 100 });
-				const fetchMock = vi
-					.fn()
-					.mockImplementation(async () =>
-						jsonResponse(200, {
-							apiKey: 'key_1',
-							verificationData: null,
-							verified: true,
-						})
-					);
+				const fetchMock = vi.fn().mockImplementation(async () =>
+					jsonResponse(200, {
+						apiKey: 'key_1',
+						verificationData: null,
+						verified: true,
+					})
+				);
 				const options = {
 					fetch: fetchMock,
 					url: 'https://sentinel.example.com/v1/verify/signature',
