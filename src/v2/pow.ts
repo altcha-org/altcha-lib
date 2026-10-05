@@ -105,9 +105,7 @@ export async function deriveChallenge(
 	};
 	if (counter === undefined) {
 		// An empty prefix matches every key, so counter 0 would solve the challenge.
-		if (!keyPrefix) {
-			throw new Error('keyPrefix must not be empty.');
-		}
+		assertKeyPrefix(keyPrefix, keyLength);
 		return { parameters, derivedKey: null };
 	}
 
@@ -187,6 +185,24 @@ export async function createChallenge(
 }
 
 /**
+ * Throws unless `keyPrefix` is a non-empty hex string no longer than the key.
+ * A non-hex or overlong prefix can never be matched by any derived key.
+ */
+function assertKeyPrefix(
+	keyPrefix: unknown,
+	keyLength: number
+): asserts keyPrefix is string {
+	if (typeof keyPrefix !== 'string' || !/^[0-9a-fA-F]+$/.test(keyPrefix)) {
+		throw new Error('keyPrefix must be a non-empty hex string.');
+	}
+	if (keyPrefix.length > keyLength * 2) {
+		throw new Error(
+			`keyPrefix (${keyPrefix.length} hex characters) must not be longer than the key (keyLength: ${keyLength} bytes).`
+		);
+	}
+}
+
+/**
  * Solves a challenge by brute-forcing counter values until the derived key
  * starts with the required prefix. Returns the solution or null on timeout/abort.
  */
@@ -202,7 +218,9 @@ export async function solveChallenge(
 		deriveKey,
 		timeout = 90_000,
 	} = options;
-	const { nonce, keyPrefix, salt } = challenge.parameters;
+	const { nonce, keyLength = 32, keyPrefix, salt } = challenge.parameters;
+	// Fail fast: an invalid prefix would otherwise run until the timeout.
+	assertKeyPrefix(keyPrefix, keyLength);
 	const nonceBuf = hexToBuffer(nonce);
 	const saltBuf = hexToBuffer(salt);
 	const keyPrefixBuf =

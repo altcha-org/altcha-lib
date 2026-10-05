@@ -265,7 +265,34 @@ describe('pow', () => {
 					hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
 					keyPrefix: '',
 				})
-			).rejects.toThrow(/keyPrefix must not be empty/);
+			).rejects.toThrow('keyPrefix must be a non-empty hex string.');
+		});
+
+		test.each(['zz', '-1', 'z', '0x00'])(
+			'should reject a non-hex keyPrefix (%s)',
+			async (keyPrefix) => {
+				await expect(
+					createChallenge({
+						algorithm: 'PBKDF2/SHA-256',
+						cost: 1,
+						deriveKey: pbkdf2.deriveKey,
+						hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+						keyPrefix,
+					})
+				).rejects.toThrow('keyPrefix must be a non-empty hex string.');
+			}
+		);
+
+		test('should reject a keyPrefix longer than the key', async () => {
+			await expect(
+				createChallenge({
+					algorithm: 'PBKDF2/SHA-256',
+					cost: 1,
+					deriveKey: pbkdf2.deriveKey,
+					keyLength: 2,
+					keyPrefix: '00000',
+				})
+			).rejects.toThrow('must not be longer than the key');
 		});
 
 		test('should reject an unsupported hmacAlgorithm', async () => {
@@ -337,6 +364,33 @@ describe('pow', () => {
 			});
 			expect(solution).toEqual(null);
 		});
+
+		test.each([
+			['', 'keyPrefix must be a non-empty hex string.'],
+			['z', 'keyPrefix must be a non-empty hex string.'],
+			['zz', 'keyPrefix must be a non-empty hex string.'],
+			['0'.repeat(65), 'must not be longer than the key'],
+		])(
+			'should throw immediately for an unsolvable keyPrefix (%s)',
+			async (keyPrefix, message) => {
+				const challenge = await createChallenge({
+					algorithm: 'PBKDF2/SHA-256',
+					cost: 1,
+					deriveKey: pbkdf2.deriveKey,
+				});
+				const start = performance.now();
+				await expect(
+					solveChallenge({
+						challenge: {
+							parameters: { ...challenge.parameters, keyPrefix },
+						},
+						deriveKey: pbkdf2.deriveKey,
+						timeout: 5_000,
+					})
+				).rejects.toThrow(message);
+				expect(performance.now() - start).toBeLessThan(1_000);
+			}
+		);
 	});
 
 	describe('verifySolution()', () => {
@@ -600,15 +654,22 @@ describe('pow', () => {
 				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
 			});
 
-			// Learn the honest KDF output for counter 0 with exactly one hash
-			// computation: solve a probe copy of the challenge whose keyPrefix
-			// is '' (matches immediately, no search).
-			const honest = (await solveChallenge({
-				challenge: {
-					parameters: { ...challenge.parameters, keyPrefix: '' },
-				},
-				deriveKey: pbkdf2.deriveKey,
-			})) as Solution;
+			// Learn the honest KDF output for counter 0 with exactly one hash computation.
+			const honest = {
+				counter: 0,
+				derivedKey: bufferToHex(
+					(
+						await pbkdf2.deriveKey(
+							challenge.parameters,
+							hexToBuffer(challenge.parameters.salt),
+							new PasswordBuffer(
+								hexToBuffer(challenge.parameters.nonce),
+								'uint32'
+							).setCounter(0)
+						)
+					).derivedKey
+				),
+			};
 
 			// Pick a keyPrefix the honest key is guaranteed not to satisfy: a
 			// byte can't be both 0x00 and 0xff.
