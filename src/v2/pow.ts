@@ -26,6 +26,23 @@ import {
 const HMAC_ALGORITHMS = Object.values(HmacAlgorithm);
 
 /**
+ * Largest counter each mode encodes exactly: `setUint32` wraps above 2^32 - 1, and
+ * integers above `Number.MAX_SAFE_INTEGER` are not exactly representable.
+ */
+const MAX_COUNTER = {
+	string: Number.MAX_SAFE_INTEGER,
+	uint32: 0xffffffff,
+} as const;
+
+function isValidCounter(n: unknown, mode: 'uint32' | 'string'): n is number {
+	return (
+		Number.isInteger(n) &&
+		(n as number) >= 0 &&
+		(n as number) <= MAX_COUNTER[mode]
+	);
+}
+
+/**
  * Manages a buffer that combines a nonce with a counter value.
  * Used to generate unique passwords for each iteration of the challenge solver.
  */
@@ -51,8 +68,14 @@ export class PasswordBuffer {
 	 * Appends the counter to the nonce buffer.
 	 * In 'string' mode, encodes the counter as a UTF-8 string.
 	 * In 'uint32' mode, writes the counter as a big-endian 32-bit integer.
+	 * Throws a RangeError unless the counter is an integer the mode encodes exactly.
 	 */
 	setCounter(n: number) {
+		if (!isValidCounter(n, this.mode)) {
+			throw new RangeError(
+				`counter must be an integer from 0 to ${MAX_COUNTER[this.mode]}. Got: ${n}`
+			);
+		}
 		if (this.mode === 'string') {
 			return concatBuffers(this.nonce, this.encoder.encode(n.toString()));
 		}
@@ -474,10 +497,12 @@ export async function verifySolution(
 	}
 
 	// A malformed solution is an invalid solution, not an error. Requiring lowercase
-	// hex (as produced by every solver) also makes paths 4a and 4b agree on case.
+	// hex (as produced by every solver) also makes paths 4a and 4b agree on case, and
+	// requiring an exact counter rejects coerced or wrapped values in both paths.
 	if (
 		typeof solution?.derivedKey !== 'string' ||
-		!/^(?:[0-9a-f]{2})+$/.test(solution.derivedKey)
+		!/^(?:[0-9a-f]{2})+$/.test(solution.derivedKey) ||
+		!isValidCounter(solution.counter, counterMode ?? 'uint32')
 	) {
 		return {
 			expired: false,

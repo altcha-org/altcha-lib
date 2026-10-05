@@ -335,6 +335,20 @@ describe('pow', () => {
 			}
 		);
 
+		test.each([2 ** 32, -1, 1.5])(
+			'should reject a counter the challenge cannot encode (%d)',
+			async (counter) => {
+				await expect(
+					createChallenge({
+						algorithm: 'PBKDF2/SHA-256',
+						cost: 1,
+						counter,
+						deriveKey: pbkdf2.deriveKey,
+					})
+				).rejects.toThrow('counter must be an integer from 0 to 4294967295');
+			}
+		);
+
 		test('should reject a keyPrefix longer than the key', async () => {
 			await expect(
 				createChallenge({
@@ -570,6 +584,38 @@ describe('pow', () => {
 			);
 		});
 
+		describe.each([
+			{ path: '4a (key signature)', hmacKeySignatureSecret: HMAC_KEY_SECRET },
+			{ path: '4b (re-derive)', hmacKeySignatureSecret: undefined },
+		])('coerced counters, path $path', ({ hmacKeySignatureSecret }) => {
+			test.each([
+				['a numeric string', (c: number) => String(c)],
+				['wrapped by 2^32', (c: number) => 2 ** 32 + c],
+				['fractional', (c: number) => c + 0.5],
+				['negative', () => -1],
+				['missing', () => undefined],
+			])(
+				'should return invalidSolution when the counter is %s',
+				async (_name, coerce) => {
+					const { challenge, solution } = await solve({ counter: 42 });
+					const result = await verifySolution({
+						challenge,
+						deriveKey: pbkdf2.deriveKey,
+						hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+						hmacKeySignatureSecret,
+						solution: {
+							...solution,
+							counter: coerce(solution.counter) as number,
+						},
+					});
+					expect(result).toMatchObject({
+						invalidSolution: true,
+						verified: false,
+					});
+				}
+			);
+		});
+
 		test('should return invalidSolution for a missing solution', async () => {
 			const { challenge } = await solve();
 			const result = await verifySolution({
@@ -773,6 +819,35 @@ describe('pow', () => {
 	});
 
 	describe('PasswordBuffer', () => {
+		test.each([
+			['uint32', -1],
+			['uint32', 2 ** 32],
+			['uint32', 1.5],
+			['uint32', NaN],
+			['string', Number.MAX_SAFE_INTEGER + 1],
+			['string', -1],
+		] as const)(
+			'should throw for an out-of-range counter (%s, %d)',
+			(mode, counter) => {
+				const password = new PasswordBuffer(new Uint8Array(16), mode);
+				expect(() => password.setCounter(counter)).toThrow(RangeError);
+			}
+		);
+
+		test('should encode the largest counter of each mode exactly', () => {
+			const nonce = new Uint8Array(16);
+			expect(
+				bufferToHex(new PasswordBuffer(nonce).setCounter(0xffffffff).slice(-4))
+			).toEqual('ffffffff');
+			expect(
+				new TextDecoder().decode(
+					new PasswordBuffer(nonce, 'string')
+						.setCounter(Number.MAX_SAFE_INTEGER)
+						.slice(16)
+				)
+			).toEqual('9007199254740991');
+		});
+
 		test('should return buffer with uint32 (single byte)', () => {
 			const counter = 123;
 			const nonce = crypto.getRandomValues(new Uint8Array(16));

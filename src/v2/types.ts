@@ -33,6 +33,7 @@ export interface CreateChallengeOptions {
 	algorithm: string;
 	/**
 	 * Randomly selected integer used as the starting counter in deterministic mode.
+	 * Must be an integer from 0 to 2^32 - 1 (`'uint32'`) or `Number.MAX_SAFE_INTEGER` (`'string'`); throws otherwise.
 	 */
 	counter?: number;
 	/**
