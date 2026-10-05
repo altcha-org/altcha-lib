@@ -1,16 +1,15 @@
 import { pbkdf2 } from 'node:crypto';
 import { promisify } from 'node:util';
+import { assertAlgorithm } from '../helpers.js';
 const pbkdf2Async = promisify(pbkdf2);
+const DIGESTS = {
+    'PBKDF2/SHA-256': 'sha256',
+    'PBKDF2/SHA-384': 'sha384',
+    'PBKDF2/SHA-512': 'sha512',
+};
 function getDigest(algorithm) {
-    switch (algorithm) {
-        case 'PBKDF2/SHA-512':
-            return 'sha512';
-        case 'PBKDF2/SHA-384':
-            return 'sha384';
-        case 'PBKDF2/SHA-256':
-        default:
-            return 'sha256';
-    }
+    assertAlgorithm(algorithm, Object.keys(DIGESTS));
+    return DIGESTS[algorithm];
 }
 export async function deriveKey(parameters, salt, password) {
     return {

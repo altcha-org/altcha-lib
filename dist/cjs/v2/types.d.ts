@@ -23,12 +23,14 @@ export interface CodeChallenge {
 }
 export interface CreateChallengeOptions {
     /**
-     * Key derivation algorithm used for the challenge.
-     * Common values: `'PBKDF2/SHA-256'`, `'ARGON2ID'`, `'SCRYPT'`.
+     * Key derivation algorithm used for the challenge. The built-in `deriveKey` functions accept
+     * exactly `'SHA-256'`, `'SHA-384'`, `'SHA-512'`, `'PBKDF2/SHA-256'`, `'PBKDF2/SHA-384'`,
+     * `'PBKDF2/SHA-512'`, `'SCRYPT'` and `'ARGON2ID'` (each its own), and throw for anything else.
      */
     algorithm: string;
     /**
      * Randomly selected integer used as the starting counter in deterministic mode.
+     * Must be an integer from 0 to 2^32 - 1 (`'uint32'`) or `Number.MAX_SAFE_INTEGER` (`'string'`); throws otherwise.
      */
     counter?: number;
     /**
@@ -60,10 +62,12 @@ export interface CreateChallengeOptions {
     hmacAlgorithm?: HmacAlgorithm;
     /**
      * HMAC secret used to sign derived keys in deterministic mode.
+     * Requires `hmacSignatureSecret`. Throws if empty.
      */
     hmacKeySignatureSecret?: string;
     /**
      * HMAC secret used to sign the challenge payload.
+     * Omit to create an unsigned challenge; throws if empty or `null`.
      */
     hmacSignatureSecret?: string;
     /**
@@ -73,7 +77,8 @@ export interface CreateChallengeOptions {
     keyLength?: number;
     /**
      * Required prefix that the derived key must match for the challenge to be solved.
-     * Defaults to `'00'`. Must not be empty (throws otherwise). Replaced by the derived prefix when `counter` is set.
+     * Defaults to `'00'`. Must be a non-empty hex string no longer than the key (`2 × keyLength` characters); throws otherwise.
+     * Lowercased before signing. Replaced by the derived prefix when `counter` is set.
      */
     keyPrefix?: string;
     /**

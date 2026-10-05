@@ -3,16 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deriveKey = deriveKey;
 const node_crypto_1 = require("node:crypto");
 const helpers_js_1 = require("../helpers.js");
+const DIGESTS = {
+    'SHA-256': 'sha256',
+    'SHA-384': 'sha384',
+    'SHA-512': 'sha512',
+};
 function getDigest(algorithm) {
-    switch (algorithm) {
-        case 'SHA-512':
-            return 'sha512';
-        case 'SHA-384':
-            return 'sha384';
-        case 'SHA-256':
-        default:
-            return 'sha256';
-    }
+    (0, helpers_js_1.assertAlgorithm)(algorithm, Object.keys(DIGESTS));
+    return DIGESTS[algorithm];
 }
 async function deriveKey(parameters, salt, password) {
     const { algorithm, keyLength = 32 } = parameters;

@@ -56,4 +56,14 @@ describe.skipIf(!('argon2' in crypto))('ARGON2ID', () => {
 			)
 		).rejects.toThrow('Unsupported algorithm: SCRYPT');
 	});
+
+	test('should require memoryCost', async () => {
+		await expect(
+			deriveKey(
+				{ ...parameters, memoryCost: undefined },
+				hexToBuffer(salt),
+				hexToBuffer(nonce)
+			)
+		).rejects.toThrow('memoryCost must be a positive integer. Got: undefined');
+	});
 });

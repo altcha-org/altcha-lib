@@ -18,8 +18,8 @@ export function create(options) {
     const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, verifyServer: verifyServerOptions, } = options;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async function challengeHandler(_req) {
-        if (!deriveKey || !createChallengeParameters) {
-            throw new Error('deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
+        if (!deriveKey || !createChallengeParameters || !hmacSignatureSecret) {
+            throw new Error('deriveKey, createChallengeParameters and hmacSignatureSecret are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
         }
         const challenge = await createChallenge({
             deriveKey,

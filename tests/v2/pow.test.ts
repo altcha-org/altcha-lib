@@ -335,6 +335,30 @@ describe('pow', () => {
 			}
 		);
 
+		test.each([
+			[{ cost: 0 }, 'cost must be a positive integer'],
+			[{ cost: Number.NaN }, 'cost must be a positive integer'],
+			[{ cost: 1.5 }, 'cost must be a positive integer'],
+			[{ keyLength: 0 }, 'keyLength must be a positive integer'],
+			[{ keyLength: '32' }, 'keyLength must be a positive integer'],
+			[{ memoryCost: -1 }, 'memoryCost must be a positive integer'],
+			[{ parallelism: 0 }, 'parallelism must be a positive integer'],
+			[{ counterMode: 'int64' }, "counterMode must be 'uint32' or 'string'"],
+			[{ expiresAt: new Date('invalid') }, 'expiresAt must be a valid Date'],
+			[{ expiresAt: Number.NaN }, 'expiresAt must be a valid Date'],
+			[{ expiresAt: -1 }, 'expiresAt must be a valid Date'],
+		])('should reject invalid options (%o)', async (options, message) => {
+			await expect(
+				createChallenge({
+					algorithm: 'PBKDF2/SHA-256',
+					cost: 1,
+					deriveKey: pbkdf2.deriveKey,
+					hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+					...(options as Partial<CreateChallengeOptions>),
+				})
+			).rejects.toThrow(message);
+		});
+
 		test.each([2 ** 32, -1, 1.5])(
 			'should reject a counter the challenge cannot encode (%d)',
 			async (counter) => {

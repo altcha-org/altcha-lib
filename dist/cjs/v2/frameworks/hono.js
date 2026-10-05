@@ -14,9 +14,9 @@ Object.defineProperty(exports, "deriveHmacKeySecret", { enumerable: true, get: f
 function create(options) {
     const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, verifyServer: verifyServerOptions, } = options;
     const challengeHandler = async (c) => {
-        if (!deriveKey || !createChallengeParameters) {
+        if (!deriveKey || !createChallengeParameters || !hmacSignatureSecret) {
             throw new http_exception_1.HTTPException(500, {
-                message: 'deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.',
+                message: 'deriveKey, createChallengeParameters and hmacSignatureSecret are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.',
             });
         }
         c.header('Cache-Control', 'no-store');

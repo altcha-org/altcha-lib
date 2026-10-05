@@ -12,6 +12,18 @@ export function assertAlgorithm<T extends string>(
 	}
 }
 
+/** Throws unless `value` is an integer of at least 1. */
+export function assertPositiveInteger(
+	name: string,
+	value: unknown
+): asserts value is number {
+	if (!Number.isInteger(value) || (value as number) < 1) {
+		throw new Error(
+			`${name} must be a positive integer. Got: ${String(value)}`
+		);
+	}
+}
+
 /** Throws unless `secret` is a non-empty string. */
 export function assertSecret(
 	name: string,

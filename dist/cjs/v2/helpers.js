@@ -1,5 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.assertAlgorithm = assertAlgorithm;
+exports.assertPositiveInteger = assertPositiveInteger;
+exports.assertSecret = assertSecret;
 exports.bufferStartsWith = bufferStartsWith;
 exports.bufferToHex = bufferToHex;
 exports.canonicalJSON = canonicalJSON;
@@ -12,6 +15,24 @@ exports.hmac = hmac;
 exports.randomInt = randomInt;
 exports.sortKeys = sortKeys;
 exports.timeDuration = timeDuration;
+/** Throws unless `algorithm` is exactly one of `allowed`. */
+function assertAlgorithm(algorithm, allowed) {
+    if (!allowed.includes(algorithm)) {
+        throw new Error(`Unsupported algorithm: ${String(algorithm)}. Expected one of: ${allowed.join(', ')}.`);
+    }
+}
+/** Throws unless `value` is an integer of at least 1. */
+function assertPositiveInteger(name, value) {
+    if (!Number.isInteger(value) || value < 1) {
+        throw new Error(`${name} must be a positive integer. Got: ${String(value)}`);
+    }
+}
+/** Throws unless `secret` is a non-empty string. */
+function assertSecret(name, secret) {
+    if (typeof secret !== 'string' || secret === '') {
+        throw new Error(`${name} must be a non-empty string.`);
+    }
+}
 /** Checks if a buffer starts with the given prefix bytes. */
 function bufferStartsWith(buffer, prefix) {
     if (prefix.length > buffer.length) {
@@ -41,19 +62,19 @@ function concatBuffers(a, b) {
     out.set(b, a.length);
     return out;
 }
-/** Converts a hex string to a Uint8Array. Throws if the string has odd length. */
+/** Converts a hex string to a Uint8Array. Throws on odd length or non-hex characters. */
 function hexToBuffer(hex) {
     if (hex.length % 2 !== 0) {
         throw new Error(`Hex string must have an even length. Got: ${hex}`);
     }
-    const buffer = new ArrayBuffer(hex.length / 2);
-    const view = new DataView(buffer);
-    for (let i = 0; i < hex.length; i += 2) {
-        const byteString = hex.substring(i, i + 2);
-        const byteValue = parseInt(byteString, 16);
-        view.setUint8(i / 2, byteValue);
+    if (!/^[0-9a-fA-F]*$/.test(hex)) {
+        throw new Error('Hex string contains non-hex characters.');
     }
-    return new Uint8Array(buffer);
+    const buffer = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < buffer.length; i++) {
+        buffer[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+    }
+    return buffer;
 }
 /** Checks if two strings are equal in constant time. */
 function constantTimeEqual(a, b) {
@@ -94,20 +115,21 @@ function randomInt(max, min = 1) {
     const randomNumber = ab[0] / (0xffffffff + 1);
     return Math.floor(randomNumber * (max - min + 1) + min);
 }
-/** Recursively sorts object keys alphabetically for deterministic serialization. */
+/**
+ * Recursively sorts object keys alphabetically for deterministic serialization.
+ * Uses `Object.fromEntries` so that a `__proto__` key stays an own property (and is
+ * serialized and signed) instead of invoking the prototype setter.
+ */
 function sortKeys(obj) {
     if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
         return obj;
     }
-    return Object.keys(obj)
+    return Object.fromEntries(Object.keys(obj)
         .sort()
-        .reduce((acc, key) => {
+        .flatMap((key) => {
         const value = obj[key];
-        if (value !== undefined) {
-            acc[key] = sortKeys(value);
-        }
-        return acc;
-    }, {});
+        return value === undefined ? [] : [[key, sortKeys(value)]];
+    }));
 }
 /** Returns elapsed time in milliseconds since `start`, rounded to one decimal. */
 function timeDuration(start) {

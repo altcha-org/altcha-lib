@@ -6,12 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deriveKey = deriveKey;
 const node_crypto_1 = __importDefault(require("node:crypto"));
 const node_util_1 = require("node:util");
+const helpers_js_1 = require("../helpers.js");
 const argon2Async = 'argon2' in node_crypto_1.default
     ? (0, node_util_1.promisify)(node_crypto_1.default.argon2)
     : async () => {
         throw new Error('Argon2 not supported in node:crypto.');
     };
 async function deriveKey(parameters, salt, password) {
+    (0, helpers_js_1.assertAlgorithm)(parameters.algorithm, ['ARGON2ID']);
+    (0, helpers_js_1.assertPositiveInteger)('memoryCost', parameters.memoryCost);
     return {
         parameters: {},
         derivedKey: await argon2Async('argon2id', {

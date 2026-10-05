@@ -131,20 +131,20 @@ Creates a new proof-of-work challenge. Generates a random nonce and salt, option
 | Option | Type | Description |
 |---|---|---|
 | `algorithm` | `string` | Key derivation algorithm: `'SHA-256'`, `'SHA-384'`, `'SHA-512'`, `'PBKDF2/SHA-256'`, `'PBKDF2/SHA-384'`, `'PBKDF2/SHA-512'`, `'SCRYPT'` or `'ARGON2ID'`. The built-in `deriveKey` functions throw for any other name, including other letter cases. |
-| `cost` | `number` | Algorithm-specific cost controlling computational difficulty. |
+| `cost` | `number` | Algorithm-specific cost controlling computational difficulty. Positive integer (throws otherwise). |
 | `deriveKey` | `DeriveKeyFunction` | Key derivation function. |
 | `counter` | `number?` | Known counter value for deterministic mode. Must be an integer from 0 to 2^32 - 1 (`'uint32'`) or `Number.MAX_SAFE_INTEGER` (`'string'`); throws otherwise. |
-| `counterMode` | `'uint32' \| 'string'` | Counter encoding format. Defaults to `'uint32'`. |
+| `counterMode` | `'uint32' \| 'string'` | Counter encoding format. Defaults to `'uint32'`. Throws for any other value. |
 | `data` | `Record<string, ...>?` | Arbitrary metadata embedded in the challenge. |
-| `expiresAt` | `number \| Date?` | Expiry timestamp (seconds) or Date. |
+| `expiresAt` | `number \| Date?` | Expiry timestamp (seconds) or Date. Throws for an invalid Date or a non-positive or non-finite number. |
 | `hmacAlgorithm` | `HmacAlgorithm?` | HMAC digest algorithm: `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
 | `hmacKeySignatureSecret` | `string?` | HMAC secret for signing derived keys (deterministic mode). Requires `hmacSignatureSecret`. Throws if empty. |
 | `hmacSignatureSecret` | `string?` | HMAC secret for signing the challenge payload. Omit to create an unsigned challenge; throws if empty or `null`. |
-| `keyLength` | `number?` | Derived key length in bytes. Defaults to `32`. |
+| `keyLength` | `number?` | Derived key length in bytes. Defaults to `32`. Positive integer (throws otherwise). |
 | `keyPrefix` | `string?` | Required prefix the derived key must match. Defaults to `'00'`. Must be a non-empty hex string no longer than the key (`2 × keyLength` characters); throws otherwise. Lowercased before signing. Replaced by the derived prefix when `counter` is set. |
 | `keyPrefixLength` | `number?` | Number of bytes used as prefix in deterministic mode. Defaults to `floor(keyLength / 2)`. Must be a positive integer smaller than the derived key length (throws otherwise); capped at half the derived key. |
-| `memoryCost` | `number?` | Memory cost in KiB (Argon2id/scrypt only). |
-| `parallelism` | `number?` | Parallelism setting (Argon2id/scrypt only). |
+| `memoryCost` | `number?` | Memory cost (Argon2id/scrypt only; required by their `deriveKey`). Positive integer if set (throws otherwise). |
+| `parallelism` | `number?` | Parallelism setting (Argon2id/scrypt only). Positive integer if set (throws otherwise). |
 
 #### `solveChallenge(options: SolveChallengeOptions): Promise<Solution | null>`
 

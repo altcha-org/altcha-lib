@@ -165,13 +165,13 @@ let AltchaService = class AltchaService {
         return this.setCookieOptions;
     }
     async getChallenge() {
-        const { createChallengeParameters, deriveKey } = this;
-        if (!deriveKey || !createChallengeParameters) {
-            throw new common_1.HttpException('deriveKey and createChallengeParameters are required to generate challenges. Omit the /challenge route when relying on Sentinel to issue challenges.', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        const { createChallengeParameters, deriveKey, hmacSignatureSecret } = this;
+        if (!deriveKey || !createChallengeParameters || !hmacSignatureSecret) {
+            throw new common_1.HttpException('deriveKey, createChallengeParameters and hmacSignatureSecret are required to generate challenges. Omit the /challenge route when relying on Sentinel to issue challenges.', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         const challenge = await (0, pow_js_1.createChallenge)({
             deriveKey,
-            hmacSignatureSecret: this.hmacSignatureSecret,
+            hmacSignatureSecret,
             hmacKeySignatureSecret: this.hmacKeySignatureSecret,
             ...createChallengeParameters(),
         });

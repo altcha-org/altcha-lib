@@ -15,6 +15,7 @@ export declare class PasswordBuffer {
      * Appends the counter to the nonce buffer.
      * In 'string' mode, encodes the counter as a UTF-8 string.
      * In 'uint32' mode, writes the counter as a big-endian 32-bit integer.
+     * Throws a RangeError unless the counter is an integer the mode encodes exactly.
      */
     setCounter(n: number): Uint8Array<ArrayBufferLike>;
 }
@@ -34,6 +35,8 @@ export declare function deriveChallenge(options: CreateChallengeOptions): Promis
  *
  * Generates random nonce and salt, optionally pre-computes a key prefix
  * from a known counter value, and optionally signs the challenge with HMAC.
+ * Omitting `hmacSignatureSecret` creates an unsigned challenge; an empty or `null`
+ * secret throws, as does `hmacKeySignatureSecret` without `hmacSignatureSecret`.
  */
 export declare function createChallenge(options: CreateChallengeOptions): Promise<Challenge>;
 /**

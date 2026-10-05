@@ -29,8 +29,8 @@ async function getPayloadFromEvent(event, fieldName, cookieName) {
 function create(options) {
     const { createChallengeParameters, deriveKey, fieldName = 'altcha', hmacSignatureSecret, hmacKeySignatureSecret, setCookie, store, verifyServer: verifyServerOptions, } = options;
     async function challengeHandler() {
-        if (!deriveKey || !createChallengeParameters) {
-            (0, kit_1.error)(500, 'deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
+        if (!deriveKey || !createChallengeParameters || !hmacSignatureSecret) {
+            (0, kit_1.error)(500, 'deriveKey, createChallengeParameters and hmacSignatureSecret are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
         }
         const challenge = await (0, pow_js_1.createChallenge)({
             deriveKey,

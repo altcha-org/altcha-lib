@@ -1,6 +1,6 @@
 import { type BinaryLike, scrypt } from 'node:crypto';
 import { promisify } from 'node:util';
-import { assertAlgorithm } from '../helpers.js';
+import { assertAlgorithm, assertPositiveInteger } from '../helpers.js';
 import type { ChallengeParameters, DeriveKeyFunctionResult } from '../types.js';
 
 const scryptAsync = promisify<
@@ -17,12 +17,13 @@ export async function deriveKey(
 	password: Uint8Array
 ): Promise<DeriveKeyFunctionResult> {
 	assertAlgorithm(parameters.algorithm, ['SCRYPT']);
+	assertPositiveInteger('memoryCost', parameters.memoryCost);
 	return {
 		parameters: {},
 		derivedKey: await scryptAsync(password, salt, parameters.keyLength, {
 			blockSize: parameters.memoryCost,
 			cost: parameters.cost,
-			maxmem: 2 * 128 * parameters.cost * parameters.memoryCost!,
+			maxmem: 2 * 128 * parameters.cost * parameters.memoryCost,
 			parallelization: parameters.parallelism || 1,
 		}),
 	};

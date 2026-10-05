@@ -55,4 +55,14 @@ describe('SCRYPT', () => {
 			)
 		).rejects.toThrow('Unsupported algorithm: SHA-256');
 	});
+
+	test('should require memoryCost', async () => {
+		await expect(
+			deriveKey(
+				{ ...parameters, memoryCost: undefined },
+				hexToBuffer(salt),
+				hexToBuffer(nonce)
+			)
+		).rejects.toThrow('memoryCost must be a positive integer. Got: undefined');
+	});
 });

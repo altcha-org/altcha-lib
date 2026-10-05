@@ -28,8 +28,8 @@ export function create(options) {
         return request.body?.altcha;
     };
     const challengeHandler = async (request, reply) => {
-        if (!deriveKey || !createChallengeParameters) {
-            throw new Error('deriveKey and createChallengeParameters are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
+        if (!deriveKey || !createChallengeParameters || !hmacSignatureSecret) {
+            throw new Error('deriveKey, createChallengeParameters and hmacSignatureSecret are required to generate challenges. Omit challengeHandler when relying on Sentinel to issue challenges.');
         }
         const challenge = await createChallenge({
             deriveKey,

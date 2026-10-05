@@ -1,4 +1,10 @@
-import { bufferToHex, constantTimeEqual, hash, hmac, timeDuration, } from './helpers.js';
+import { assertAlgorithm, assertSecret, bufferToHex, constantTimeEqual, hash, hmac, timeDuration, } from './helpers.js';
+import { HmacAlgorithm, } from './types.js';
+/**
+ * Algorithms accepted for server signatures and fields hashes.
+ * SHA-1 is kept because Sentinel signs v1 challenges with the challenge's own algorithm.
+ */
+const SERVER_SIGNATURE_ALGORITHMS = ['SHA-1', ...Object.values(HmacAlgorithm)];
 export function parseVerificationData(data, convertToArray = ['fields', 'reasons']) {
     const verificationData = {};
     try {
@@ -32,6 +38,7 @@ export function parseVerificationData(data, convertToArray = ['fields', 'reasons
 }
 export async function verifyFieldsHash(options) {
     const { algorithm = 'SHA-256', formData, fields, fieldsHash } = options;
+    assertAlgorithm(algorithm, SERVER_SIGNATURE_ALGORITHMS);
     const data = formData instanceof FormData ? Object.fromEntries(formData) : formData;
     const lines = [];
     for (const field of fields) {
@@ -41,13 +48,19 @@ export async function verifyFieldsHash(options) {
 }
 export async function verifyServerSignature(options) {
     const { hmacSecret, payload } = options;
+    // `algorithm` is not covered by the signature, so it must be validated before use.
+    assertAlgorithm(payload.algorithm, SERVER_SIGNATURE_ALGORITHMS);
+    assertSecret('hmacSecret', hmacSecret);
     const start = performance.now();
     const signature = bufferToHex(await hmac(payload.algorithm, await hash(payload.algorithm, payload.verificationData), hmacSecret));
     const verificationData = parseVerificationData(payload.verificationData);
+    // Same comparison as `verifySolution`: expired as soon as the current (fractional)
+    // second passes `expire`. A missing or empty `expire` means the payload does not expire.
     const expired = !!verificationData &&
         !!verificationData.expire &&
-        verificationData.expire < Math.floor(Date.now() / 1000);
-    const invalidSignature = !constantTimeEqual(payload.signature, signature);
+        verificationData.expire < Date.now() / 1000;
+    const invalidSignature = typeof payload.signature !== 'string' ||
+        !constantTimeEqual(payload.signature, signature);
     const invalidSolution = !verificationData ||
         verificationData.verified !== true ||
         payload.verified !== true;

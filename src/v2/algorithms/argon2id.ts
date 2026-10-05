@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { promisify } from 'node:util';
-import { assertAlgorithm } from '../helpers.js';
+import { assertAlgorithm, assertPositiveInteger } from '../helpers.js';
 import type { ChallengeParameters, DeriveKeyFunctionResult } from '../types.js';
 
 const argon2Async =
@@ -16,10 +16,11 @@ export async function deriveKey(
 	password: Uint8Array
 ): Promise<DeriveKeyFunctionResult> {
 	assertAlgorithm(parameters.algorithm, ['ARGON2ID']);
+	assertPositiveInteger('memoryCost', parameters.memoryCost);
 	return {
 		parameters: {},
 		derivedKey: await argon2Async('argon2id', {
-			memory: parameters.memoryCost!,
+			memory: parameters.memoryCost,
 			parallelism: parameters.parallelism || 1,
 			nonce: salt,
 			message: password,

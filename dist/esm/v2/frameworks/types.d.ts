@@ -20,8 +20,9 @@ export interface AltchaOptions {
      */
     fieldName?: string;
     /**
-     * HMAC secret used to sign and verify challenge signatures.
-     * Optional if `verifyServer` is configured and only Sentinel-issued (server-signed)
+     * HMAC secret used to sign and verify challenge signatures. Must be a non-empty string.
+     * Required to use `challengeHandler` or to verify self-hosted (client-type) payloads;
+     * optional if `verifyServer` is configured and only Sentinel-issued (server-signed)
      * payloads are verified remotely.
      */
     hmacSignatureSecret?: string;

@@ -1,5 +1,6 @@
 import {
 	assertAlgorithm,
+	assertPositiveInteger,
 	assertSecret,
 	bufferStartsWith,
 	bufferToHex,
@@ -111,6 +112,33 @@ export async function deriveChallenge(
 		memoryCost,
 		parallelism,
 	} = options;
+	// Validate up front: invalid values would otherwise produce NaN parameters,
+	// crash inside a KDF, or silently disable expiry.
+	assertPositiveInteger('cost', cost);
+	assertPositiveInteger('keyLength', keyLength);
+	if (memoryCost !== undefined) {
+		assertPositiveInteger('memoryCost', memoryCost);
+	}
+	if (parallelism !== undefined) {
+		assertPositiveInteger('parallelism', parallelism);
+	}
+	if (counterMode !== 'uint32' && counterMode !== 'string') {
+		throw new Error(
+			`counterMode must be 'uint32' or 'string'. Got: ${String(counterMode)}`
+		);
+	}
+	const expiresAtSeconds =
+		expiresAt instanceof Date
+			? Math.floor(expiresAt.getTime() / 1_000)
+			: expiresAt;
+	if (
+		expiresAtSeconds !== undefined &&
+		!(Number.isFinite(expiresAtSeconds) && expiresAtSeconds > 0)
+	) {
+		throw new Error(
+			'expiresAt must be a valid Date or a positive number of seconds.'
+		);
+	}
 	const parameters: ChallengeParameters = {
 		algorithm,
 		nonce: bufferToHex(crypto.getRandomValues(new Uint8Array(16))),
@@ -120,10 +148,7 @@ export async function deriveChallenge(
 		memoryCost,
 		parallelism,
 		keyPrefix,
-		expiresAt:
-			expiresAt instanceof Date
-				? Math.floor(expiresAt.getTime() / 1_000)
-				: expiresAt,
+		expiresAt: expiresAtSeconds,
 		data,
 	};
 	if (counter === undefined) {
