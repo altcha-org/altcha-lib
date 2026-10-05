@@ -165,6 +165,24 @@ function getDefaultMemoryCost(algorithm) {
 	return undefined;
 }
 
+/**
+ * Normalizes `--algorithm` for `create`: case-insensitive, defaults to PBKDF2/SHA-256.
+ * The name is signed into the challenge and the key derivation functions accept only
+ * the exact uppercase names, so anything else would create an unsolvable challenge.
+ */
+function parseAlgorithm(value) {
+	if (value === undefined) {
+		return 'PBKDF2/SHA-256';
+	}
+	const algorithm = typeof value === 'string' ? value.toUpperCase() : '';
+	if (!ALGORITHMS.includes(algorithm)) {
+		throw new Error(
+			`Unsupported algorithm: ${value}. Supported: ${ALGORITHMS.join(', ')}`
+		);
+	}
+	return algorithm;
+}
+
 try {
 	if (command === 'obfuscate' || command === 'deobfuscate') {
 		const data = rest.length ? rest.join(' ') : await readStdin();
@@ -177,7 +195,7 @@ try {
 		console.log(result);
 	} else if (command === 'create') {
 		const { opts } = parseArgs(rest);
-		const algorithm = opts['algorithm'] || 'SHA-256';
+		const algorithm = parseAlgorithm(opts['algorithm']);
 		const cost = opts['cost']
 			? parseInt(opts['cost'], 10)
 			: getDefaultCost(algorithm);

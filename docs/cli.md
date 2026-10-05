@@ -28,7 +28,7 @@ altcha-lib create [options]
 
 | Option | Description | Default |
 |---|---|---|
-| `--algorithm <algo>` | Key derivation algorithm | `PBKDF2/SHA-256` |
+| `--algorithm <algo>` | Key derivation algorithm (case-insensitive): `PBKDF2/SHA-256`, `PBKDF2/SHA-384`, `PBKDF2/SHA-512`, `SCRYPT`, `ARGON2ID`, `SHA-256`, `SHA-384`, `SHA-512` | `PBKDF2/SHA-256` |
 | `--cost <n>` | Algorithm cost parameter | `5000` (SHA/PBKDF2), `16384` (SCRYPT), `3` (ARGON2ID) |
 | `--hmac-secret <secret>` | HMAC secret for signing the challenge | — |
 | `--hmac-key-secret <secret>` | HMAC secret for signing the derived key (deterministic mode) | — |
