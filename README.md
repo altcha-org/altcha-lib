@@ -200,7 +200,7 @@ Returns `VerifySolutionResult`:
 
 #### `verifyFieldsHash(options): Promise<boolean>`
 
-Verifies the SHA hash of specified form fields.
+Verifies the SHA hash of specified form fields. Neither `verifyServerSignature` nor the framework plugins call this; for Sentinel payloads that include `fields` and `fieldsHash`, call it yourself (see [`/docs/server-signatures.md`](/docs/server-signatures.md#form-fields-hash)).
 
 | Option | Type | Description |
 |---|---|---|

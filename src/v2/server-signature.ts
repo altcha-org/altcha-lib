@@ -85,11 +85,15 @@ export async function verifyServerSignature(options: {
 		)
 	);
 	const verificationData = parseVerificationData(payload.verificationData);
+	// Same comparison as `verifySolution`: expired as soon as the current (fractional)
+	// second passes `expire`. A missing or empty `expire` means the payload does not expire.
 	const expired =
 		!!verificationData &&
 		!!verificationData.expire &&
-		verificationData.expire < Math.floor(Date.now() / 1000);
-	const invalidSignature = !constantTimeEqual(payload.signature, signature);
+		verificationData.expire < Date.now() / 1000;
+	const invalidSignature =
+		typeof payload.signature !== 'string' ||
+		!constantTimeEqual(payload.signature, signature);
 	const invalidSolution =
 		!verificationData ||
 		verificationData.verified !== true ||

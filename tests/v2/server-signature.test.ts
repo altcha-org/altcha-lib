@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
 	parseVerificationData,
 	verifyFieldsHash,
@@ -215,6 +215,70 @@ describe('Server Signature', () => {
 				verified: false,
 			});
 		});
+
+		describe('expiry', () => {
+			afterEach(() => {
+				vi.useRealTimers();
+			});
+
+			async function verifyAt(now: number, verificationData: string) {
+				vi.useFakeTimers({ now, toFake: ['Date'] });
+				const signature = bufferToHex(
+					await hmac(
+						algorithm,
+						await hash(algorithm, verificationData),
+						hmacSecret
+					)
+				);
+				return verifyServerSignature({
+					hmacSecret,
+					payload: { algorithm, signature, verificationData, verified: true },
+				});
+			}
+
+			test('should expire as soon as the current second passes expire', async () => {
+				const result = await verifyAt(
+					1_790_000_000_500,
+					'expire=1790000000&verified=true'
+				);
+				expect(result).toMatchObject({ expired: true, verified: false });
+			});
+
+			test('should not expire while within the expire second', async () => {
+				const result = await verifyAt(
+					1_790_000_000_000,
+					'expire=1790000000&verified=true'
+				);
+				expect(result).toMatchObject({ expired: false, verified: true });
+			});
+
+			test.each(['verified=true', 'expire=&verified=true'])(
+				'should not expire without an expire value, as Sentinel issues for challenges without expiresAt (%s)',
+				async (verificationData) => {
+					const result = await verifyAt(1_790_000_000_000, verificationData);
+					expect(result).toMatchObject({ expired: false, verified: true });
+				}
+			);
+		});
+
+		test.each([undefined, null, 123])(
+			'should return invalidSignature for a non-string signature (%s)',
+			async (signature) => {
+				const result = await verifyServerSignature({
+					hmacSecret,
+					payload: {
+						algorithm,
+						signature: signature as unknown as string,
+						verificationData: 'verified=true',
+						verified: true,
+					},
+				});
+				expect(result).toMatchObject({
+					invalidSignature: true,
+					verified: false,
+				});
+			}
+		);
 
 		test.each(['MD5', 'sha-256', 'HS256', undefined])(
 			'should throw for an unsupported or missing algorithm (%s)',

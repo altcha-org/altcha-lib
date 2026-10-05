@@ -20,6 +20,41 @@ const altcha = create({
 For more details about the differences between self-contained and Sentinel verification, see the documentation:
 [https://altcha.org/docs/v2/server-verification/](https://altcha.org/docs/v2/server-verification/)
 
+## Verification data checks
+
+`verifyServerSignature` (and the framework plugins, which call it) checks the signature, `verified` and `expire` from the signed `verificationData`:
+
+* The payload is expired as soon as the current time passes `expire` (Unix seconds), with the same comparison `verifySolution` uses.
+* If `expire` is missing or empty, the payload does not expire. Sentinel leaves `expire` empty when the challenge itself has no `expiresAt`. Configure a store to prevent replays of such payloads (see [`/docs/store.md`](/docs/store.md)).
+* A payload without a string `signature` returns `invalidSignature: true`.
+
+### Form fields hash
+
+When the widget sends form fields to Sentinel for classification, Sentinel adds `fields` (field names) and `fieldsHash` (SHA-256 of their values) to `verificationData`. Neither `verifyServerSignature` nor the framework plugins compare them with the submitted form. Call `verifyFieldsHash` yourself to reject submissions whose fields were changed after classification:
+
+```ts
+import { verifyFieldsHash } from 'altcha-lib';
+
+app.post('/submit', altcha.middleware(), async (req, res) => {
+  const verification = res.locals.altcha?.verification;
+  const data =
+    verification && 'verificationData' in verification
+      ? verification.verificationData
+      : null;
+  if (data?.fields && data.fieldsHash) {
+    const valid = await verifyFieldsHash({
+      formData: req.body,
+      fields: data.fields,
+      fieldsHash: data.fieldsHash,
+    });
+    if (!valid) {
+      return res.status(403).json({ error: 'Form fields were modified.' });
+    }
+  }
+  // ...
+});
+```
+
 ## Remote verification (Sentinel API)
 
 Instead of verifying the HMAC signature locally, you can call Sentinel's `/v1/verify/signature` API directly with `verifyServer`. This avoids managing the HMAC secret in your server, at the cost of a network round-trip:
