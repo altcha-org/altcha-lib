@@ -55,19 +55,19 @@ export function concatBuffers(a: Uint8Array, b: Uint8Array) {
 	return out;
 }
 
-/** Converts a hex string to a Uint8Array. Throws if the string has odd length. */
+/** Converts a hex string to a Uint8Array. Throws on odd length or non-hex characters. */
 export function hexToBuffer(hex: string): Uint8Array {
 	if (hex.length % 2 !== 0) {
 		throw new Error(`Hex string must have an even length. Got: ${hex}`);
 	}
-	const buffer = new ArrayBuffer(hex.length / 2);
-	const view = new DataView(buffer);
-	for (let i = 0; i < hex.length; i += 2) {
-		const byteString = hex.substring(i, i + 2);
-		const byteValue = parseInt(byteString, 16);
-		view.setUint8(i / 2, byteValue);
+	if (!/^[0-9a-fA-F]*$/.test(hex)) {
+		throw new Error('Hex string contains non-hex characters.');
 	}
-	return new Uint8Array(buffer);
+	const buffer = new Uint8Array(hex.length / 2);
+	for (let i = 0; i < buffer.length; i++) {
+		buffer[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+	}
+	return buffer;
 }
 
 /** Checks if two strings are equal in constant time. */

@@ -72,6 +72,19 @@ describe('helpers', () => {
 				textEncoder.encode('Hello World')
 			);
 		});
+
+		test('should accept uppercase hex', () => {
+			expect(helpers.bufferToHex(helpers.hexToBuffer('ABcd'))).toEqual('abcd');
+		});
+
+		test.each(['zz', '-1', '0x', '+f', ' 1', '1g'])(
+			'should throw for non-hex input (%s)',
+			(hex) => {
+				expect(() => helpers.hexToBuffer(hex)).toThrow(
+					'Hex string contains non-hex characters.'
+				);
+			}
+		);
 	});
 
 	describe('hash()', () => {

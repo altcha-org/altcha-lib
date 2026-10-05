@@ -449,6 +449,21 @@ export async function verifySolution(
 		};
 	}
 
+	// A malformed solution is an invalid solution, not an error. Requiring lowercase
+	// hex (as produced by every solver) also makes paths 4a and 4b agree on case.
+	if (
+		typeof solution?.derivedKey !== 'string' ||
+		!/^(?:[0-9a-f]{2})+$/.test(solution.derivedKey)
+	) {
+		return {
+			expired: false,
+			invalidSignature: false,
+			invalidSolution: true,
+			time: timeDuration(start),
+			verified: false,
+		};
+	}
+
 	// 4a. If a key signature exists, verify the derived key against it (faster path).
 	if (challenge.parameters.keySignature && hmacKeySignatureSecret) {
 		const derivedKeySignatureCheck = bufferToHex(

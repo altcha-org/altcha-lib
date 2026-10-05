@@ -430,6 +430,51 @@ describe('pow', () => {
 			).rejects.toThrow(/hmac(Key)?SignatureSecret must be a non-empty string/);
 		});
 
+		describe.each([
+			{ path: '4a (key signature)', hmacKeySignatureSecret: HMAC_KEY_SECRET },
+			{ path: '4b (re-derive)', hmacKeySignatureSecret: undefined },
+		])('malformed solutions, path $path', ({ hmacKeySignatureSecret }) => {
+			test.each([
+				['non-hex', () => 'zz'.repeat(32)],
+				['odd length', () => 'abc'],
+				['empty', () => ''],
+				['missing', () => undefined],
+				['sign prefix', (key: string) => '-1' + key.slice(2)],
+				['uppercase of the correct key', (key: string) => key.toUpperCase()],
+			])(
+				'should return invalidSolution when derivedKey is %s',
+				async (_name, malform) => {
+					const { challenge, solution } = await solve({ counter: 42 });
+					const result = await verifySolution({
+						challenge,
+						deriveKey: pbkdf2.deriveKey,
+						hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+						hmacKeySignatureSecret,
+						solution: {
+							...solution,
+							derivedKey: malform(solution.derivedKey) as string,
+						},
+					});
+					expect(result).toMatchObject({
+						invalidSignature: false,
+						invalidSolution: true,
+						verified: false,
+					});
+				}
+			);
+		});
+
+		test('should return invalidSolution for a missing solution', async () => {
+			const { challenge } = await solve();
+			const result = await verifySolution({
+				challenge,
+				deriveKey: pbkdf2.deriveKey,
+				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+				solution: null as unknown as Solution,
+			});
+			expect(result).toMatchObject({ invalidSolution: true, verified: false });
+		});
+
 		test('should fail verification with invalid HMAC key', async () => {
 			const { challenge, solution } = await solve();
 			const result = await verifySolution({
