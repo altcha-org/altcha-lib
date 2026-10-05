@@ -169,4 +169,19 @@ describe('SHA', () => {
 			}
 		}
 	);
+
+	test.each(['SHA-1', 'sha-256', 'PBKDF2/SHA-256', 'MD5'])(
+		'should reject an unsupported algorithm in both implementations (%s)',
+		async (algorithm) => {
+			for (const derive of [deriveKey, nodeDeriveKey]) {
+				await expect(
+					derive(
+						{ ...parameters, algorithm },
+						hexToBuffer(salt),
+						hexToBuffer(nonce)
+					)
+				).rejects.toThrow(`Unsupported algorithm: ${algorithm}`);
+			}
+		}
+	);
 });

@@ -45,4 +45,14 @@ describe('SCRYPT', () => {
 			'6597973da7e41352ed98dd86fefa6568d7762ad8f42f06830d54700d452763da'
 		);
 	});
+
+	test('should reject a different algorithm name', async () => {
+		await expect(
+			deriveKey(
+				{ ...parameters, algorithm: 'SHA-256' },
+				hexToBuffer(salt),
+				hexToBuffer(nonce)
+			)
+		).rejects.toThrow('Unsupported algorithm: SHA-256');
+	});
 });

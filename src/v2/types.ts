@@ -26,8 +26,9 @@ export interface CodeChallenge {
 
 export interface CreateChallengeOptions {
 	/**
-	 * Key derivation algorithm used for the challenge.
-	 * Common values: `'PBKDF2/SHA-256'`, `'ARGON2ID'`, `'SCRYPT'`.
+	 * Key derivation algorithm used for the challenge. The built-in `deriveKey` functions accept
+	 * exactly `'SHA-256'`, `'SHA-384'`, `'SHA-512'`, `'PBKDF2/SHA-256'`, `'PBKDF2/SHA-384'`,
+	 * `'PBKDF2/SHA-512'`, `'SCRYPT'` and `'ARGON2ID'` (each its own), and throw for anything else.
 	 */
 	algorithm: string;
 	/**

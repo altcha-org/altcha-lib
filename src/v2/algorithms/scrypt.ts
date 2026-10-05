@@ -1,5 +1,6 @@
 import { type BinaryLike, scrypt } from 'node:crypto';
 import { promisify } from 'node:util';
+import { assertAlgorithm } from '../helpers.js';
 import type { ChallengeParameters, DeriveKeyFunctionResult } from '../types.js';
 
 const scryptAsync = promisify<
@@ -15,6 +16,7 @@ export async function deriveKey(
 	salt: Uint8Array,
 	password: Uint8Array
 ): Promise<DeriveKeyFunctionResult> {
+	assertAlgorithm(parameters.algorithm, ['SCRYPT']);
 	return {
 		parameters: {},
 		derivedKey: await scryptAsync(password, salt, parameters.keyLength, {

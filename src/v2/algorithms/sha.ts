@@ -1,17 +1,16 @@
 import { createHash } from 'node:crypto';
-import { concatBuffers } from '../helpers.js';
+import { assertAlgorithm, concatBuffers } from '../helpers.js';
 import type { ChallengeParameters, DeriveKeyFunctionResult } from '../types.js';
 
+const DIGESTS = {
+	'SHA-256': 'sha256',
+	'SHA-384': 'sha384',
+	'SHA-512': 'sha512',
+} as const;
+
 function getDigest(algorithm: string) {
-	switch (algorithm) {
-		case 'SHA-512':
-			return 'sha512';
-		case 'SHA-384':
-			return 'sha384';
-		case 'SHA-256':
-		default:
-			return 'sha256';
-	}
+	assertAlgorithm(algorithm, Object.keys(DIGESTS) as (keyof typeof DIGESTS)[]);
+	return DIGESTS[algorithm];
 }
 
 export async function deriveKey(

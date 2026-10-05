@@ -130,7 +130,7 @@ Creates a new proof-of-work challenge. Generates a random nonce and salt, option
 
 | Option | Type | Description |
 |---|---|---|
-| `algorithm` | `string` | Key derivation algorithm (e.g. `'PBKDF2/SHA-256'`, `'ARGON2ID'`, `'SCRYPT'`). |
+| `algorithm` | `string` | Key derivation algorithm: `'SHA-256'`, `'SHA-384'`, `'SHA-512'`, `'PBKDF2/SHA-256'`, `'PBKDF2/SHA-384'`, `'PBKDF2/SHA-512'`, `'SCRYPT'` or `'ARGON2ID'`. The built-in `deriveKey` functions throw for any other name, including other letter cases. |
 | `cost` | `number` | Algorithm-specific cost controlling computational difficulty. |
 | `deriveKey` | `DeriveKeyFunction` | Key derivation function. |
 | `counter` | `number?` | Known counter value for deterministic mode. |

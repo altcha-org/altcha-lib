@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { deriveKey } from '../../../../src/v2/algorithms/web/pbkdf2.js';
+import { deriveKey as nodeDeriveKey } from '../../../../src/v2/algorithms/pbkdf2.js';
 import { bufferToHex, hexToBuffer } from '../../../../src/v2/helpers.js';
 import { PasswordBuffer } from '../../../../src/v2/pow.js';
 import { ChallengeParameters } from '../../../../src/v2/types.js';
@@ -78,4 +79,40 @@ describe('PBKDF2', () => {
 			'd1033a8a8ae79a03ed06bdcfd8ad361aaafc72701c5db9da40fdeecefe3ec41a'
 		);
 	});
+
+	test.each([1, 16, 20, 48, 64])(
+		'should match the Node implementation for any keyLength (%i)',
+		async (keyLength) => {
+			const password = new PasswordBuffer(hexToBuffer(nonce), 'uint32');
+			password.setCounter(123);
+			const challengeParameters = { ...parameters, cost: 10, keyLength };
+			const web = await deriveKey(
+				challengeParameters,
+				hexToBuffer(salt),
+				password.buffer
+			);
+			const node = await nodeDeriveKey(
+				challengeParameters,
+				hexToBuffer(salt),
+				password.buffer
+			);
+			expect(web.derivedKey.length).toEqual(keyLength);
+			expect(bufferToHex(web.derivedKey)).toEqual(bufferToHex(node.derivedKey));
+		}
+	);
+
+	test.each(['PBKDF2/SHA-1', 'pbkdf2/sha-256', 'SHA-256', 'PBKDF2/MD5'])(
+		'should reject an unsupported algorithm in both implementations (%s)',
+		async (algorithm) => {
+			for (const derive of [deriveKey, nodeDeriveKey]) {
+				await expect(
+					derive(
+						{ ...parameters, algorithm },
+						hexToBuffer(salt),
+						hexToBuffer(nonce)
+					)
+				).rejects.toThrow(`Unsupported algorithm: ${algorithm}`);
+			}
+		}
+	);
 });

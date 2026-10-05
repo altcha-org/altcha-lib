@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { promisify } from 'node:util';
+import { assertAlgorithm } from '../helpers.js';
 import type { ChallengeParameters, DeriveKeyFunctionResult } from '../types.js';
 
 const argon2Async =
@@ -14,6 +15,7 @@ export async function deriveKey(
 	salt: Uint8Array,
 	password: Uint8Array
 ): Promise<DeriveKeyFunctionResult> {
+	assertAlgorithm(parameters.algorithm, ['ARGON2ID']);
 	return {
 		parameters: {},
 		derivedKey: await argon2Async('argon2id', {

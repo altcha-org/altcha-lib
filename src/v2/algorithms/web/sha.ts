@@ -1,4 +1,4 @@
-import { concatBuffers } from '../../helpers.js';
+import { assertAlgorithm, concatBuffers } from '../../helpers.js';
 import type {
 	ChallengeParameters,
 	DeriveKeyFunctionResult,
@@ -10,6 +10,7 @@ export async function deriveKey(
 	password: Uint8Array
 ): Promise<DeriveKeyFunctionResult> {
 	const { algorithm, keyLength = 32 } = parameters;
+	assertAlgorithm(algorithm, ['SHA-256', 'SHA-384', 'SHA-512']);
 	const iterations = Math.max(1, parameters.cost);
 	let derivedKey = concatBuffers(salt, password);
 	// Each round hashes the full previous digest; truncate to keyLength only at the end,

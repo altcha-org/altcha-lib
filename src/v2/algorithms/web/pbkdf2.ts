@@ -1,3 +1,4 @@
+import { assertAlgorithm } from '../../helpers.js';
 import type {
 	ChallengeParameters,
 	DeriveKeyFunctionResult,
@@ -8,32 +9,32 @@ export async function deriveKey(
 	salt: Uint8Array,
 	password: Uint8Array
 ): Promise<DeriveKeyFunctionResult> {
-	const { cost, keyLength = 32 } = parameters;
-	const hash = parameters.algorithm.startsWith('PBKDF2/')
-		? parameters.algorithm.slice(7)
-		: 'SHA-256';
+	const { algorithm, cost, keyLength = 32 } = parameters;
+	assertAlgorithm(algorithm, [
+		'PBKDF2/SHA-256',
+		'PBKDF2/SHA-384',
+		'PBKDF2/SHA-512',
+	]);
 	const passwordKey = await crypto.subtle.importKey(
 		'raw',
 		password as Uint8Array<ArrayBuffer>,
 		{ name: 'PBKDF2' },
 		false,
-		['deriveKey']
+		['deriveBits']
 	);
-	const derivedKey = await crypto.subtle.deriveKey(
+	// deriveBits supports any key length, unlike deriving an AES key (16, 24 or 32 bytes only).
+	const derivedBits = await crypto.subtle.deriveBits(
 		{
 			name: 'PBKDF2',
 			salt: salt as Uint8Array<ArrayBuffer>,
 			iterations: cost,
-			hash,
+			hash: algorithm.slice('PBKDF2/'.length),
 		},
 		passwordKey,
-		{ name: 'AES-GCM', length: keyLength * 8 },
-		true,
-		['encrypt']
+		keyLength * 8
 	);
 	return {
-		derivedKey: new Uint8Array(
-			await crypto.subtle.exportKey('raw', derivedKey)
-		),
+		parameters: {},
+		derivedKey: new Uint8Array(derivedBits),
 	};
 }
