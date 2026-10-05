@@ -51,3 +51,17 @@ console.log(result);
 //   verified: true,
 // }
 ```
+
+## Challenge signature format
+
+Other implementations that create or verify challenges compatible with this library must reproduce the following exactly:
+
+- `signature = hex(HMAC(hmacAlgorithm, hmacSignatureSecret, canonicalJSON(parameters)))`, lowercase hex.
+- `parameters.keySignature = hex(HMAC(hmacAlgorithm, hmacKeySignatureSecret, derivedKeyBytes))` (deterministic mode only). It is added to `parameters` before `signature` is computed, so it is covered by the signature.
+- `canonicalJSON(x)` is `JSON.stringify(sortKeys(x))`:
+  - Object keys are sorted by UTF-16 code unit order (`Array.prototype.sort`), recursively for nested objects.
+  - Arrays are not recursed into: objects inside arrays keep their key order.
+  - Keys whose value is `undefined` are omitted; `null` is kept.
+  - `JSON.stringify` emits integer-like keys (such as `"1"`) before all other keys, in ascending numeric order, regardless of the sort.
+  - Numbers use JavaScript formatting (`1`, not `1.0`; `1e+21` for large values).
+  - Every own key is serialized, including `__proto__`.

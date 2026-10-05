@@ -136,20 +136,23 @@ export function randomInt(max: number, min: number = 1): number {
 	return Math.floor(randomNumber * (max - min + 1) + min);
 }
 
-/** Recursively sorts object keys alphabetically for deterministic serialization. */
+/**
+ * Recursively sorts object keys alphabetically for deterministic serialization.
+ * Uses `Object.fromEntries` so that a `__proto__` key stays an own property (and is
+ * serialized and signed) instead of invoking the prototype setter.
+ */
 export function sortKeys<T = unknown>(obj: T): T {
 	if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
 		return obj;
 	}
-	return Object.keys(obj)
-		.sort()
-		.reduce<Record<string, unknown>>((acc, key) => {
-			const value = (obj as Record<string, unknown>)[key];
-			if (value !== undefined) {
-				acc[key] = sortKeys(value);
-			}
-			return acc;
-		}, {}) as T;
+	return Object.fromEntries(
+		Object.keys(obj)
+			.sort()
+			.flatMap((key) => {
+				const value = (obj as Record<string, unknown>)[key];
+				return value === undefined ? [] : [[key, sortKeys(value)]];
+			})
+	) as T;
 }
 
 /** Returns elapsed time in milliseconds since `start`, rounded to one decimal. */

@@ -581,6 +581,25 @@ describe('pow', () => {
 			expect(result).toMatchObject({ invalidSolution: true, verified: false });
 		});
 
+		test('should reject a challenge with an injected __proto__ parameter', async () => {
+			const { challenge, solution } = await solve();
+			const tampered = JSON.parse(
+				JSON.stringify(challenge).replace(
+					'"parameters":{',
+					'"parameters":{"__proto__":{"x":1},'
+				)
+			);
+			expect(Object.hasOwn(tampered.parameters, '__proto__')).toBe(true);
+			const result = await verifySolution({
+				challenge: tampered,
+				deriveKey: pbkdf2.deriveKey,
+				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+				hmacKeySignatureSecret: HMAC_KEY_SECRET,
+				solution,
+			});
+			expect(result).toMatchObject({ invalidSignature: true, verified: false });
+		});
+
 		test('should fail verification with invalid HMAC key', async () => {
 			const { challenge, solution } = await solve();
 			const result = await verifySolution({

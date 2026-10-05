@@ -53,6 +53,13 @@ describe('helpers', () => {
 				})
 			);
 		});
+
+		test('should keep a parsed __proto__ key, sorted like any other key', () => {
+			const obj = JSON.parse('{"b":1,"__proto__":{"x":1},"a":{"__proto__":2}}');
+			expect(helpers.canonicalJSON(obj)).toEqual(
+				'{"__proto__":{"x":1},"a":{"__proto__":2},"b":1}'
+			);
+		});
 	});
 
 	describe('concatBuffers()', () => {
