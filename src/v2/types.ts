@@ -79,7 +79,7 @@ export interface CreateChallengeOptions {
 	/**
 	 * Required prefix that the derived key must match for the challenge to be solved.
 	 * Defaults to `'00'`. Must be a non-empty hex string no longer than the key (`2 × keyLength` characters); throws otherwise.
-	 * Replaced by the derived prefix when `counter` is set.
+	 * Lowercased before signing. Replaced by the derived prefix when `counter` is set.
 	 */
 	keyPrefix?: string;
 	/**

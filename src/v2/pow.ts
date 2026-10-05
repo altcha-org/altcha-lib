@@ -106,6 +106,9 @@ export async function deriveChallenge(
 	if (counter === undefined) {
 		// An empty prefix matches every key, so counter 0 would solve the challenge.
 		assertKeyPrefix(keyPrefix, keyLength);
+		// Normalize before signing: derived keys are lowercase hex, and several ports
+		// compare prefixes as strings.
+		parameters.keyPrefix = keyPrefix.toLowerCase();
 		return { parameters, derivedKey: null };
 	}
 
@@ -223,6 +226,9 @@ export async function solveChallenge(
 	assertKeyPrefix(keyPrefix, keyLength);
 	const nonceBuf = hexToBuffer(nonce);
 	const saltBuf = hexToBuffer(salt);
+	// Odd-length prefixes are compared as hex strings, so match case-insensitively
+	// like the byte comparison used for even-length prefixes.
+	const keyPrefixHex = keyPrefix.toLowerCase();
 	const keyPrefixBuf =
 		keyPrefix.length % 2 === 0 ? hexToBuffer(keyPrefix) : null;
 	const password = new PasswordBuffer(nonceBuf, counterMode);
@@ -253,7 +259,7 @@ export async function solveChallenge(
 		if (
 			keyPrefixBuf
 				? bufferStartsWith(derivedKey, keyPrefixBuf)
-				: bufferToHex(derivedKey).startsWith(keyPrefix)
+				: bufferToHex(derivedKey).startsWith(keyPrefixHex)
 		) {
 			derivedKeyHex = bufferToHex(derivedKey);
 			break;
@@ -520,7 +526,7 @@ export async function verifySolution(
 		keyPrefix.length % 2 === 0 ? hexToBuffer(keyPrefix) : null;
 	const prefixMatches = keyPrefixBuf
 		? bufferStartsWith(derivedKey, keyPrefixBuf)
-		: derivedKeyHex.startsWith(keyPrefix);
+		: derivedKeyHex.startsWith(keyPrefix.toLowerCase());
 	const invalidSolution = !(keyMatches && prefixMatches);
 	return {
 		expired: false,

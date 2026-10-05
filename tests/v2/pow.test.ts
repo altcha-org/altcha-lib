@@ -245,6 +245,58 @@ describe('pow', () => {
 			).rejects.toThrow(/derived key length \(32 bytes\)/);
 		});
 
+		test('should lowercase keyPrefix before signing', async () => {
+			const challenge = await createChallenge({
+				algorithm: 'PBKDF2/SHA-256',
+				cost: 1,
+				deriveKey: pbkdf2.deriveKey,
+				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+				keyPrefix: 'ABC',
+			});
+			expect(challenge.parameters.keyPrefix).toEqual('abc');
+			const solution = (await solveChallenge({
+				challenge,
+				deriveKey: pbkdf2.deriveKey,
+			})) as Solution;
+			expect(solution.derivedKey.startsWith('abc')).toBe(true);
+			const result = await verifySolution({
+				challenge,
+				deriveKey: pbkdf2.deriveKey,
+				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+				solution,
+			});
+			expect(result.verified).toBe(true);
+		});
+
+		test('should solve and verify a signed odd-length uppercase keyPrefix from another issuer', async () => {
+			const { parameters } = await createChallenge({
+				algorithm: 'PBKDF2/SHA-256',
+				cost: 1,
+				deriveKey: pbkdf2.deriveKey,
+			});
+			// Signed as-is, as an older version or another port would issue it.
+			const challenge = await signChallenge(
+				HmacAlgorithm.SHA_256,
+				{ ...parameters, keyPrefix: 'A' },
+				undefined,
+				HMAC_SIGNATURE_SECRET
+			);
+			const solution = (await solveChallenge({
+				challenge,
+				deriveKey: pbkdf2.deriveKey,
+				timeout: 5_000,
+			})) as Solution;
+			expect(solution).not.toBeNull();
+			expect(solution.derivedKey.startsWith('a')).toBe(true);
+			const result = await verifySolution({
+				challenge,
+				deriveKey: pbkdf2.deriveKey,
+				hmacSignatureSecret: HMAC_SIGNATURE_SECRET,
+				solution,
+			});
+			expect(result.verified).toBe(true);
+		});
+
 		test('should cap keyPrefixLength at half the derived key', async () => {
 			const result = await createChallenge({
 				algorithm: 'PBKDF2/SHA-256',
