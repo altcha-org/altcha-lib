@@ -1,4 +1,4 @@
-import { error, json, type RequestEvent } from '@sveltejs/kit';
+import { error, type RequestEvent } from '@sveltejs/kit';
 import type { sequence } from '@sveltejs/kit/hooks';
 import { createChallenge } from '../pow.js';
 import { randomInt } from '../helpers.js';
@@ -77,7 +77,7 @@ export function create(options: AltchaOptions) {
 			...createChallengeParameters(),
 		});
 
-		return json(
+		return Response.json(
 			{
 				configuration: setCookie
 					? {
@@ -99,7 +99,7 @@ export function create(options: AltchaOptions) {
 			hmacKeySignatureSecret,
 			store
 		);
-		return json(result);
+		return Response.json(result);
 	}
 
 	function createHandle(

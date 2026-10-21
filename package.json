@@ -48,6 +48,10 @@
       "import": "./dist/esm/v2/algorithms/*.js",
       "require": "./dist/cjs/v2/algorithms/*.js"
     },
+    "./frameworks/sveltekit": {
+      "types": "./dist/esm/v2/frameworks/sveltekit.d.ts",
+      "import": "./dist/esm/v2/frameworks/sveltekit.js"
+    },
     "./frameworks/*": {
       "types": "./dist/esm/v2/frameworks/*.d.ts",
       "import": "./dist/esm/v2/frameworks/*.js",

@@ -5,5 +5,7 @@
       "module": "commonjs",
       "moduleResolution": "node",
       "target": "ES2021"
-    }
+    },
+    // @sveltejs/kit is ESM-only (no `require`/`default` export condition), so the SvelteKit plugin ships as ESM only.
+    "exclude": ["node_modules", "src/v2/frameworks/sveltekit.ts"]
   }

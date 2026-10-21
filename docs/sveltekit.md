@@ -2,6 +2,8 @@
 
 The SvelteKit plugin simplifies integrating ALTCHA into your application. It provides handlers and middleware for challenge generation and verification.
 
+The plugin is ESM-only, like `@sveltejs/kit`: import it with `import`; `require('altcha-lib/frameworks/sveltekit')` is not supported.
+
 ## Handlers
 
 * `challengeHandler` — Generates a new challenge. Configure this endpoint as the widget’s `challenge` URL.

@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { createChallenge } from '../pow.js';
 import { randomInt } from '../helpers.js';
 import { CappedMap } from '../capped-map.js';
@@ -32,7 +32,7 @@ export function create(options) {
             hmacKeySignatureSecret,
             ...createChallengeParameters(),
         });
-        return json({
+        return Response.json({
             configuration: setCookie
                 ? {
                     setCookie,
@@ -44,7 +44,7 @@ export function create(options) {
     async function verifyHandler(event) {
         const payload = await getPayloadFromEvent(event, fieldName);
         const result = await verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret, store);
-        return json(result);
+        return Response.json(result);
     }
     function createHandle(middlewareOptions = {}) {
         const { throwOnFailure = true } = middlewareOptions;
