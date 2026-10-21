@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.7.0] - 2026-10-21
+
+### Fixed
+
+- SvelteKit 3 support: the `@sveltejs/kit` peer dependency accepts `^2.0.0 || ^3.0.0`, so npm no longer fails with `ERESOLVE` in SvelteKit 3 projects ([#21](https://github.com/altcha-org/altcha-lib/issues/21)). `altcha-lib/frameworks/sveltekit` no longer imports `Handle` from `@sveltejs/kit`, which SvelteKit 3 moved to `@sveltejs/kit/hooks`.
+
+### Changed
+
+- `altcha-lib/frameworks/sveltekit` is ESM-only, like `@sveltejs/kit`. The CommonJS build could not be loaded because `@sveltejs/kit` cannot be `require()`d; `require('altcha-lib/frameworks/sveltekit')` now fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` for `altcha-lib` instead.
+- `altcha-lib/frameworks/sveltekit` responds with `Response.json` instead of SvelteKit's `json` helper, which SvelteKit 3 deprecates.
+
 ## [2.6.0] - 2026-10-05
 
 ### Security
@@ -213,7 +224,8 @@ First stable release, freezing the API for version 1.x.
 - `verifySolution` checks the expiration automatically when the salt contains `?expires=`. Pass `checkExpires: false` as the optional third argument to disable it.
 - `extractParams` extracts custom parameters from the base64-encoded payload, the payload object or the challenge object.
 
-[Unreleased]: https://github.com/altcha-org/altcha-lib/compare/v2.5.0...HEAD
+[2.7.0]: https://github.com/altcha-org/altcha-lib/compare/v2.6.0...v2.7.0
+[2.6.0]: https://github.com/altcha-org/altcha-lib/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/altcha-org/altcha-lib/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/altcha-org/altcha-lib/compare/v2.3.2...v2.4.0
 [2.3.2]: https://github.com/altcha-org/altcha-lib/compare/v2.3.1...v2.3.2
