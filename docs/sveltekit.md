@@ -123,7 +123,7 @@ export const actions = {
 File: `src/hooks.server.ts`
 
 ```ts
-import { sequence } from '@sveltejs/kit/hooks';
+import { sequence, type Handle } from '@sveltejs/kit/hooks'; // SvelteKit 2: import `Handle` from '@sveltejs/kit'
 import { altcha } from '$lib/altcha';
 
 const altchaGuard = altcha.createHandle({ throwOnFailure: true });

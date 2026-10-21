@@ -1,10 +1,12 @@
-import { type RequestEvent, type Handle } from '@sveltejs/kit';
+import { type RequestEvent } from '@sveltejs/kit';
+import type { sequence } from '@sveltejs/kit/hooks';
 import { randomInt } from '../helpers.js';
 import { CappedMap } from '../capped-map.js';
 import { deriveHmacKeySecret, verify } from './shared.js';
 import type { AltchaMiddlewareOptions, AltchaOptions, AltchaResult } from './types.js';
 export { CappedMap, deriveHmacKeySecret, randomInt };
 export type { AltchaOptions, AltchaResult };
+type Handle = ReturnType<typeof sequence>;
 declare global {
     namespace App {
         interface Locals {

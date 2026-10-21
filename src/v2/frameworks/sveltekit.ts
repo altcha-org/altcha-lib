@@ -1,4 +1,5 @@
-import { error, json, type RequestEvent, type Handle } from '@sveltejs/kit';
+import { error, json, type RequestEvent } from '@sveltejs/kit';
+import type { sequence } from '@sveltejs/kit/hooks';
 import { createChallenge } from '../pow.js';
 import { randomInt } from '../helpers.js';
 import { CappedMap } from '../capped-map.js';
@@ -11,6 +12,10 @@ import type {
 
 export { CappedMap, deriveHmacKeySecret, randomInt };
 export type { AltchaOptions, AltchaResult };
+
+// SvelteKit 3 moved `Handle` from '@sveltejs/kit' to '@sveltejs/kit/hooks'.
+// `sequence` takes and returns `Handle` in both majors, so derive it from there.
+type Handle = ReturnType<typeof sequence>;
 
 declare global {
 	// eslint-disable-next-line @typescript-eslint/no-namespace
