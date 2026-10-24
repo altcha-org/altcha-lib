@@ -2,6 +2,8 @@
 
 The Nuxt plugin simplifies integrating ALTCHA into your application. It provides handlers and middleware for challenge generation and verification.
 
+`altcha-lib/frameworks/h3` works with both h3 v1 (Nuxt 4, Nitro 2) and h3 v2 (Nitro 3). It does not import `h3` at runtime, so it keeps working when your package manager installs a different h3 major for `altcha-lib` than the one your server uses.
+
 ## Handlers
 
 * `challengeHandler` — Generates a new challenge. Configure this endpoint as the widget’s `challenge` URL.
@@ -13,8 +15,9 @@ The middleware automatically handles verification during requests.
 
 Features:
 
-* Validates the payload from the request body or a configured cookie.
+* Validates the payload from the request body (JSON, URL-encoded or multipart form data) or a configured cookie.
 * Sets `event.context.altcha`, which includes the challenge data and verification result.
+* Leaves the request body readable, so handlers after the middleware can still call `readBody`.
 
 Options:
 
@@ -80,10 +83,10 @@ export const altcha = create({
 
 ### 2. Challenge endpoint
 
-File: `server/altcha/challenge.get.ts`
+File: `server/routes/altcha/challenge.get.ts`
 
 ```ts
-import { altcha } from '~/server/utils/altcha';
+import { altcha } from '~~/server/utils/altcha';
  
 export default altcha.challengeHandler;
 ```
@@ -91,10 +94,10 @@ export default altcha.challengeHandler;
 
 ### 3. Standalone verify endpoint
 
-File: `server/altcha/verify.post.ts `
+File: `server/routes/altcha/verify.post.ts`
 
 ```ts
-import { altcha } from '~/server/utils/altcha';
+import { altcha } from '~~/server/utils/altcha';
  
 export default altcha.verifyHandler;
 ```
@@ -104,7 +107,7 @@ export default altcha.verifyHandler;
 File: `server/middleware/altcha.ts`
 
 ```ts
-import { altcha } from '~/server/utils/altcha';
+import { altcha } from '~~/server/utils/altcha';
  
 const altchaMiddleware = altcha.middleware({
   throwOnFailure: true,
@@ -124,7 +127,7 @@ export default defineEventHandler(async (event) => {
 
 ### 5. Example protected endpoint
 
-File: `server/submit.post.ts`
+File: `server/routes/submit.post.ts`
 
 ```ts
 export default defineEventHandler(async (event) => {
@@ -134,7 +137,8 @@ export default defineEventHandler(async (event) => {
   // Optionally inspect the result:
   const altchaResult = event.context.altcha;
   if (!altchaResult?.verification) {
-    throw new HTTPError(403, {
+    throw createError({
+      statusCode: 403,
       message: altchaResult?.error || 'Verification failed',
     });
   }
