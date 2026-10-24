@@ -4,6 +4,8 @@
       "outDir": "./dist/cjs",
       "module": "commonjs",
       "moduleResolution": "node",
+      // TS 6 deprecates node10 resolution; kept so emitted CJS .d.ts specifiers stay unchanged. Must migrate before TS 7.
+      "ignoreDeprecations": "6.0",
       "target": "ES2021"
     },
     // @sveltejs/kit is ESM-only (no `require`/`default` export condition), so the SvelteKit plugin ships as ESM only.
