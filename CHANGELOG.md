@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.8.0] - 2026-10-24
+
+### Fixed
+
+- Nuxt 4 support: `altcha-lib/frameworks/h3` works with h3 v1 (Nuxt 4, Nitro 2) as well as h3 v2 (Nitro 3), and the `h3` peer dependency accepts `^1.15.0 || ^2.0.0` ([#22](https://github.com/altcha-org/altcha-lib/issues/22)). The plugin no longer imports `h3` at runtime, so it no longer fails with `event.req.headers.get is not a function` when the package manager installs h3 v2 for `altcha-lib` next to Nuxt's h3 v1.
+- `altcha-lib/frameworks/h3` middleware leaves the request body readable for later handlers on both h3 majors.
+- `altcha-lib/frameworks/h3` errors (403 on failed verification, 400 on an invalid JSON or form data body) are recognized as HTTP errors by both h3 v1 and v2. h3 v1 previously treated them as unhandled errors.
+- `docs/nuxt.md`: route files live under `server/routes/`, imports use `~~/server/...` (Nuxt 4's `~` points to `app/`), and the example uses `createError`, which exists in h3 v1 and v2.
+
+### Changed
+
+- The build uses TypeScript 6. `tsconfig.cjs.json` sets `ignoreDeprecations: "6.0"` to keep `moduleResolution: "node"` for the CommonJS build, which TypeScript 6 deprecates and TypeScript 7 removes.
+
 ## [2.7.0] - 2026-10-21
 
 ### Fixed
@@ -224,6 +237,7 @@ First stable release, freezing the API for version 1.x.
 - `verifySolution` checks the expiration automatically when the salt contains `?expires=`. Pass `checkExpires: false` as the optional third argument to disable it.
 - `extractParams` extracts custom parameters from the base64-encoded payload, the payload object or the challenge object.
 
+[2.8.0]: https://github.com/altcha-org/altcha-lib/compare/v2.7.0...v2.8.0
 [2.7.0]: https://github.com/altcha-org/altcha-lib/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/altcha-org/altcha-lib/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/altcha-org/altcha-lib/compare/v2.4.0...v2.5.0
