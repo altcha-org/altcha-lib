@@ -1,4 +1,4 @@
-import { assertAlgorithm, assertSecret, bufferToHex, constantTimeEqual, hash, hmac, timeDuration, } from './helpers.js';
+import { assertAlgorithm, assertSecret, bufferToHex, constantTimeEqual, hash, hmac, parsePayload, timeDuration, } from './helpers.js';
 import { HmacAlgorithm, } from './types.js';
 /**
  * Algorithms accepted for server signatures and fields hashes.
@@ -46,12 +46,35 @@ export async function verifyFieldsHash(options) {
     }
     return bufferToHex(await hash(algorithm, lines.join('\n'))) === fieldsHash;
 }
+/**
+ * Verifies a server-signed payload from ALTCHA Sentinel locally with the API key's secret.
+ * `payload` is the base64-encoded JSON string submitted by the widget, or its decoded object.
+ * An undecodable payload or one without `algorithm` returns `verified: false` with
+ * `invalidSolution: true`.
+ */
 export async function verifyServerSignature(options) {
-    const { hmacSecret, payload } = options;
-    // `algorithm` is not covered by the signature, so it must be validated before use.
-    assertAlgorithm(payload.algorithm, SERVER_SIGNATURE_ALGORITHMS);
+    const { hmacSecret } = options;
     assertSecret('hmacSecret', hmacSecret);
     const start = performance.now();
+    const payload = (typeof options.payload === 'string'
+        ? parsePayload(options.payload)
+        : options.payload);
+    if (!payload ||
+        typeof payload !== 'object' ||
+        payload.algorithm === undefined ||
+        payload.algorithm === null ||
+        payload.algorithm === '') {
+        return {
+            expired: false,
+            invalidSignature: null,
+            invalidSolution: true,
+            time: timeDuration(start),
+            verificationData: null,
+            verified: false,
+        };
+    }
+    // `algorithm` is not covered by the signature, so it must be validated before use.
+    assertAlgorithm(payload.algorithm, SERVER_SIGNATURE_ALGORITHMS);
     const signature = bufferToHex(await hmac(payload.algorithm, await hash(payload.algorithm, payload.verificationData), hmacSecret));
     const verificationData = parseVerificationData(payload.verificationData);
     // Same comparison as `verifySolution`: expired as soon as the current (fractional)

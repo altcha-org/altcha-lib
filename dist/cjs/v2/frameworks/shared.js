@@ -19,7 +19,7 @@ async function verify(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureS
         };
     }
     if (typeof payload === 'string') {
-        payload = parsePayload(payload);
+        payload = (0, helpers_js_1.parsePayload)(payload);
     }
     if (!payload) {
         return {
@@ -127,14 +127,6 @@ function getPayloadType(payload) {
         return 'client';
     }
     return null;
-}
-function parsePayload(payload) {
-    try {
-        return JSON.parse(atob(payload));
-    }
-    catch {
-        return null;
-    }
 }
 function verifyClientPayload(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret) {
     const { challenge, solution } = payload;

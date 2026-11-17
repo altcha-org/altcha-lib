@@ -23,6 +23,11 @@ export declare function delay(ms: number): Promise<void>;
 export declare function hash(algorithm: string, data: ArrayBuffer | string): Promise<Uint8Array>;
 /** Computes an HMAC signature using the Web Crypto API. */
 export declare function hmac(algorithm: HmacAlgorithm, data: string | Uint8Array, keyStr: string): Promise<Uint8Array>;
+/**
+ * Decodes a base64-encoded JSON payload, as submitted by the widget.
+ * Returns `null` if it is not valid base64 or JSON, or does not decode to an object.
+ */
+export declare function parsePayload(payload: string): Record<string, unknown> | null;
 /** Generates a random integer between the specified minimum and maximum values (inclusive). */
 export declare function randomInt(max: number, min?: number): number;
 /**

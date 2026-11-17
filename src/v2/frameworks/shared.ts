@@ -1,7 +1,7 @@
 import { verifySolution } from '../pow.js';
 import { verifyServerSignature } from '../server-signature.js';
 import { verifyServer } from '../verify-server.js';
-import { bufferToHex, hmac } from '../helpers.js';
+import { bufferToHex, hmac, parsePayload } from '../helpers.js';
 import {
 	DeriveKeyFunction,
 	HmacAlgorithm,
@@ -168,14 +168,6 @@ function getPayloadType(payload: unknown) {
 		return 'client';
 	}
 	return null;
-}
-
-function parsePayload(payload: string) {
-	try {
-		return JSON.parse(atob(payload));
-	} catch {
-		return null;
-	}
 }
 
 function verifyClientPayload(

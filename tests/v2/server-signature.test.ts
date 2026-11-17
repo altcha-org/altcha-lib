@@ -280,8 +280,8 @@ describe('Server Signature', () => {
 			}
 		);
 
-		test.each(['MD5', 'sha-256', 'HS256', undefined])(
-			'should throw for an unsupported or missing algorithm (%s)',
+		test.each(['MD5', 'sha-256', 'HS256'])(
+			'should throw for an unsupported algorithm (%s)',
 			async (badAlgorithm) => {
 				const verificationData = 'verified=true';
 				const signature = bufferToHex(
@@ -295,13 +295,74 @@ describe('Server Signature', () => {
 					verifyServerSignature({
 						hmacSecret,
 						payload: {
-							algorithm: badAlgorithm as string,
+							algorithm: badAlgorithm,
 							signature,
 							verificationData,
 							verified: true,
 						},
 					})
 				).rejects.toThrow(`Unsupported algorithm: ${badAlgorithm}`);
+			}
+		);
+
+		test.each([undefined, null, ''])(
+			'should return invalidSolution for a missing algorithm (%s)',
+			async (badAlgorithm) => {
+				const result = await verifyServerSignature({
+					hmacSecret,
+					payload: {
+						algorithm: badAlgorithm as string,
+						signature: '00',
+						verificationData: 'verified=true',
+						verified: true,
+					},
+				});
+				expect(result).toEqual({
+					expired: false,
+					invalidSignature: null,
+					invalidSolution: true,
+					time: expect.any(Number),
+					verificationData: null,
+					verified: false,
+				});
+			}
+		);
+
+		test('should verify a base64-encoded JSON string payload', async () => {
+			const verificationData = 'device.browser=Firefox&verified=true';
+			const signature = bufferToHex(
+				await hmac(
+					algorithm,
+					await hash(algorithm, verificationData),
+					hmacSecret
+				)
+			);
+			const result = await verifyServerSignature({
+				hmacSecret,
+				payload: btoa(
+					JSON.stringify({
+						algorithm,
+						signature,
+						verificationData,
+						verified: true,
+					})
+				),
+			});
+			expect(result).toMatchObject({
+				verificationData: { 'device.browser': 'Firefox', verified: true },
+				verified: true,
+			});
+		});
+
+		test.each(['not base64!', btoa('not json'), btoa('123'), btoa('null')])(
+			'should return invalidSolution for an undecodable string payload (%s)',
+			async (payload) => {
+				const result = await verifyServerSignature({ hmacSecret, payload });
+				expect(result).toMatchObject({
+					invalidSolution: true,
+					verificationData: null,
+					verified: false,
+				});
 			}
 		);
 

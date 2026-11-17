@@ -27,6 +27,9 @@ For more details about the differences between self-contained and Sentinel verif
 * The payload is expired as soon as the current time passes `expire` (Unix seconds), with the same comparison `verifySolution` uses.
 * If `expire` is missing or empty, the payload does not expire. Sentinel leaves `expire` empty when the challenge itself has no `expiresAt`. Configure a store to prevent replays of such payloads (see [`/docs/store.md`](/docs/store.md)).
 * A payload without a string `signature` returns `invalidSignature: true`.
+* `payload` may be the base64-encoded JSON string the widget submits or its decoded object. A string that does not decode to an object, or a payload without `algorithm`, returns `verified: false` with `invalidSolution: true`. An `algorithm` other than `SHA-1`, `SHA-256`, `SHA-384` or `SHA-512` throws.
+
+`verificationData` is keyed by the signed form field names, e.g. `data['device.browser']`. `verifyServer` returns the same shape.
 
 ### Form fields hash
 
@@ -57,7 +60,31 @@ app.post('/submit', altcha.middleware(), async (req, res) => {
 
 ## Remote verification (Sentinel API)
 
-Instead of verifying the HMAC signature locally, you can call Sentinel's `/v1/verify/signature` API directly with `verifyServer`. This avoids managing the HMAC secret in your server, at the cost of a network round-trip:
+Instead of verifying the HMAC signature locally, you can call Sentinel's verify signature API directly with `verifyServer`. This avoids managing the HMAC secret in your server, at the cost of a network round-trip. Both Sentinel v2 (`/v2/verify/signature`) and Sentinel v1 (`/v1/verify/signature`) are supported; they differ in how the request is authenticated.
+
+### Sentinel v2
+
+```ts
+import { verifyServer } from 'altcha-lib';
+
+const result = await verifyServer({
+  payload, // the payload received from POST /v2/verify
+  url: 'https://sentinel.example.com/v2/verify/signature',
+  apiKey: { id: API_KEY_ID, secret: API_KEY_SECRET }, // restricted or full key
+  timeout: 10_000,
+  retries: 2,
+});
+
+if (result.verified) {
+  // ...
+}
+```
+
+* `apiKey` is a restricted or full API key of the account that owns the payload's API key. It is sent as `Authorization: Basic base64(id:secret)`. Sentinel v2 rejects unauthenticated requests to `/v2/verify/signature`.
+* The request body is `{ payload }`.
+* Sentinel v2 returns `verificationData` nested (`{ device: { browser } }`). `verifyServer` flattens it to the shape `verifyServerSignature` returns (`data['device.browser']`).
+
+### Sentinel v1
 
 ```ts
 import { verifyServer } from 'altcha-lib';
@@ -75,12 +102,34 @@ if (result.verified) {
 }
 ```
 
+* `/v1/verify/signature` takes no credentials. `secret` (the API key secret) is optional and is sent in the request body as `{ payload, secret }`.
+* Do not combine `secret` with `apiKey`. When `apiKey` is set, `secret` is not sent.
+
+### Errors and retries
+
+On an error response, `reason` is the `code` of Sentinel's error body (`{ code, error, statusCode }`), e.g. `UNAUTHORIZED`. If the body has no `code` (as with Sentinel v1), `reason` is its `error`, and otherwise `HTTP_<status>`. 4xx responses are not retried. Network errors, timeouts and 5xx responses are retried up to `retries` times.
+
 ### Using remote verification with framework plugins
 
 All framework plugins (Express, Fastify, NestJS, Next.js, Nuxt/H3, SvelteKit, Hono) accept
 a `verifyServer` option. When set, payloads submitted through `middleware` (or SvelteKit's
 `createHandle`/`verifyEvent`) are verified remotely via `verifyServer` instead of locally, so
-you don't need to configure `hmacSignatureSecret` at all:
+you don't need to configure `hmacSignatureSecret` at all.
+
+Sentinel v2:
+
+```ts
+const altcha = create({
+  verifyServer: {
+    url: 'https://sentinel.example.com/v2/verify/signature',
+    apiKey: { id: API_KEY_ID, secret: API_KEY_SECRET },
+    timeout: 10_000,
+    retries: 2,
+  },
+});
+```
+
+Sentinel v1:
 
 ```ts
 const altcha = create({

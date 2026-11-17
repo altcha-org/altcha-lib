@@ -4,9 +4,13 @@ import { HTTPException } from 'hono/http-exception';
 import { create } from 'altcha-lib/frameworks/hono';
 
 // URL of your ALTCHA Sentinel instance's verify/signature endpoint
-const SENTINEL_URL = 'https://sentinel.example.com/v1/verify/signature';
-// API key secret, optional — Sentinel checks it against the payload's API key
-const SENTINEL_API_KEY_SECRET = 'sec_...';
+const SENTINEL_URL = 'https://sentinel.example.com/v2/verify/signature';
+// Restricted or full API key of the account that owns the widget's API key
+const SENTINEL_API_KEY = { id: 'key_...', secret: 'sec_...' };
+
+// Sentinel v1 instead: use the /v1 endpoint and replace `apiKey` below with the
+// optional API key secret, `secret: 'sec_...'`.
+// const SENTINEL_URL = 'https://sentinel.example.com/v1/verify/signature';
 
 const altcha = create({
 	// No hmacSignatureSecret, deriveKey, or createChallengeParameters needed here —
@@ -14,7 +18,7 @@ const altcha = create({
 	// verifies the resulting payload remotely.
 	verifyServer: {
 		url: SENTINEL_URL,
-		secret: SENTINEL_API_KEY_SECRET,
+		apiKey: SENTINEL_API_KEY,
 		timeout: 10_000,
 		retries: 2,
 	},

@@ -140,6 +140,21 @@ export async function hmac(
 	return new Uint8Array(signature);
 }
 
+/**
+ * Decodes a base64-encoded JSON payload, as submitted by the widget.
+ * Returns `null` if it is not valid base64 or JSON, or does not decode to an object.
+ */
+export function parsePayload(payload: string): Record<string, unknown> | null {
+	try {
+		const data: unknown = JSON.parse(atob(payload));
+		return data && typeof data === 'object' && !Array.isArray(data)
+			? (data as Record<string, unknown>)
+			: null;
+	} catch {
+		return null;
+	}
+}
+
 /** Generates a random integer between the specified minimum and maximum values (inclusive). */
 export function randomInt(max: number, min: number = 1): number {
 	const ab = new Uint32Array(1);

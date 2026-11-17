@@ -11,7 +11,12 @@ npm install altcha-lib
 ## Usage
 
 ```ts
-import { createChallenge, deriveHmacKeySecret, randomInt, verifySolution } from 'altcha-lib';
+import {
+	createChallenge,
+	deriveHmacKeySecret,
+	randomInt,
+	verifySolution,
+} from 'altcha-lib';
 import { deriveKey } from 'altcha-lib/algorithms/pbkdf2';
 
 const HMAC_SECRET = 'your-secret-key';
@@ -19,25 +24,25 @@ const HMAC_KEY_SECRET = 'your-other-secret-key';
 
 // On the server: create a challenge and send it to the client
 const challenge = await createChallenge({
-  algorithm: 'PBKDF2/SHA-256',
-  cost: 5_000,
+	algorithm: 'PBKDF2/SHA-256',
+	cost: 5_000,
 	counter: randomInt(5_000, 10_000),
-  deriveKey,
-  hmacSignatureSecret: HMAC_SECRET,
+	deriveKey,
+	hmacSignatureSecret: HMAC_SECRET,
 	hmacKeySignatureSecret: HMAC_KEY_SECRET,
 });
 
 // On the server: verify the solution submitted by the client
 const result = await verifySolution({
-  challenge: payload.challenge,
-  solution: payload.solution,
-  deriveKey,
-  hmacSignatureSecret: HMAC_SECRET,
+	challenge: payload.challenge,
+	solution: payload.solution,
+	deriveKey,
+	hmacSignatureSecret: HMAC_SECRET,
 	hmacKeySignatureSecret: HMAC_KEY_SECRET,
 });
 
 if (result.verified) {
-  // challenge passed
+	// challenge passed
 }
 ```
 
@@ -128,130 +133,158 @@ The default import path (`altcha-lib`) uses the v2 API. The v1 API is available 
 
 Creates a new proof-of-work challenge. Generates a random nonce and salt, optionally pre-computes a key prefix from a known counter value, and optionally signs the challenge with HMAC.
 
-| Option | Type | Description |
-|---|---|---|
-| `algorithm` | `string` | Key derivation algorithm: `'SHA-256'`, `'SHA-384'`, `'SHA-512'`, `'PBKDF2/SHA-256'`, `'PBKDF2/SHA-384'`, `'PBKDF2/SHA-512'`, `'SCRYPT'` or `'ARGON2ID'`. The built-in `deriveKey` functions throw for any other name, including other letter cases. |
-| `cost` | `number` | Algorithm-specific cost controlling computational difficulty. Positive integer (throws otherwise). |
-| `deriveKey` | `DeriveKeyFunction` | Key derivation function. |
-| `counter` | `number?` | Known counter value for deterministic mode. Must be an integer from 0 to 2^32 - 1 (`'uint32'`) or `Number.MAX_SAFE_INTEGER` (`'string'`); throws otherwise. |
-| `counterMode` | `'uint32' \| 'string'` | Counter encoding format. Defaults to `'uint32'`. Throws for any other value. |
-| `data` | `Record<string, ...>?` | Arbitrary metadata embedded in the challenge. |
-| `expiresAt` | `number \| Date?` | Expiry timestamp (seconds) or Date. Throws for an invalid Date or a non-positive or non-finite number. |
-| `hmacAlgorithm` | `HmacAlgorithm?` | HMAC digest algorithm: `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
-| `hmacKeySignatureSecret` | `string?` | HMAC secret for signing derived keys (deterministic mode). Requires `hmacSignatureSecret`. Throws if empty. |
-| `hmacSignatureSecret` | `string?` | HMAC secret for signing the challenge payload. Omit to create an unsigned challenge; throws if empty or `null`. |
-| `keyLength` | `number?` | Derived key length in bytes. Defaults to `32`. Positive integer (throws otherwise). |
-| `keyPrefix` | `string?` | Required prefix the derived key must match. Defaults to `'00'`. Must be a non-empty hex string no longer than the key (`2 × keyLength` characters); throws otherwise. Lowercased before signing. Replaced by the derived prefix when `counter` is set. |
-| `keyPrefixLength` | `number?` | Number of bytes used as prefix in deterministic mode. Defaults to `floor(keyLength / 2)`. Must be a positive integer smaller than the derived key length (throws otherwise); capped at half the derived key. |
-| `memoryCost` | `number?` | Memory cost (Argon2id/scrypt only; required by their `deriveKey`). Positive integer if set (throws otherwise). |
-| `parallelism` | `number?` | Parallelism setting (Argon2id/scrypt only). Positive integer if set (throws otherwise). |
+| Option                   | Type                   | Description                                                                                                                                                                                                                                            |
+| ------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `algorithm`              | `string`               | Key derivation algorithm: `'SHA-256'`, `'SHA-384'`, `'SHA-512'`, `'PBKDF2/SHA-256'`, `'PBKDF2/SHA-384'`, `'PBKDF2/SHA-512'`, `'SCRYPT'` or `'ARGON2ID'`. The built-in `deriveKey` functions throw for any other name, including other letter cases.    |
+| `cost`                   | `number`               | Algorithm-specific cost controlling computational difficulty. Positive integer (throws otherwise).                                                                                                                                                     |
+| `deriveKey`              | `DeriveKeyFunction`    | Key derivation function.                                                                                                                                                                                                                               |
+| `counter`                | `number?`              | Known counter value for deterministic mode. Must be an integer from 0 to 2^32 - 1 (`'uint32'`) or `Number.MAX_SAFE_INTEGER` (`'string'`); throws otherwise.                                                                                            |
+| `counterMode`            | `'uint32' \| 'string'` | Counter encoding format. Defaults to `'uint32'`. Throws for any other value.                                                                                                                                                                           |
+| `data`                   | `Record<string, ...>?` | Arbitrary metadata embedded in the challenge.                                                                                                                                                                                                          |
+| `expiresAt`              | `number \| Date?`      | Expiry timestamp (seconds) or Date. Throws for an invalid Date or a non-positive or non-finite number.                                                                                                                                                 |
+| `hmacAlgorithm`          | `HmacAlgorithm?`       | HMAC digest algorithm: `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`.                                                                                                                                            |
+| `hmacKeySignatureSecret` | `string?`              | HMAC secret for signing derived keys (deterministic mode). Requires `hmacSignatureSecret`. Throws if empty.                                                                                                                                            |
+| `hmacSignatureSecret`    | `string?`              | HMAC secret for signing the challenge payload. Omit to create an unsigned challenge; throws if empty or `null`.                                                                                                                                        |
+| `keyLength`              | `number?`              | Derived key length in bytes. Defaults to `32`. Positive integer (throws otherwise).                                                                                                                                                                    |
+| `keyPrefix`              | `string?`              | Required prefix the derived key must match. Defaults to `'00'`. Must be a non-empty hex string no longer than the key (`2 × keyLength` characters); throws otherwise. Lowercased before signing. Replaced by the derived prefix when `counter` is set. |
+| `keyPrefixLength`        | `number?`              | Number of bytes used as prefix in deterministic mode. Defaults to `floor(keyLength / 2)`. Must be a positive integer smaller than the derived key length (throws otherwise); capped at half the derived key.                                           |
+| `memoryCost`             | `number?`              | Memory cost (Argon2id/scrypt only; required by their `deriveKey`). Positive integer if set (throws otherwise).                                                                                                                                         |
+| `parallelism`            | `number?`              | Parallelism setting (Argon2id/scrypt only). Positive integer if set (throws otherwise).                                                                                                                                                                |
 
 #### `solveChallenge(options: SolveChallengeOptions): Promise<Solution | null>`
 
 Solves a challenge by brute-forcing counter values until the derived key starts with the required prefix. Returns `null` on timeout or abort.
 
-| Option | Type | Description |
-|---|---|---|
-| `challenge` | `Challenge` | The challenge to solve. |
-| `deriveKey` | `DeriveKeyFunction` | Key derivation function. |
-| `controller` | `AbortController?` | For cancelling the solve operation. |
-| `counterStart` | `number?` | Initial counter value. Defaults to `0`. |
-| `counterStep` | `number?` | Increment between attempts. Defaults to `1`. |
-| `counterMode` | `'uint32' \| 'string'?` | Counter encoding format. Defaults to `'uint32'`. |
-| `timeout` | `number?` | Timeout in milliseconds. Defaults to `90000`. |
+| Option         | Type                    | Description                                      |
+| -------------- | ----------------------- | ------------------------------------------------ |
+| `challenge`    | `Challenge`             | The challenge to solve.                          |
+| `deriveKey`    | `DeriveKeyFunction`     | Key derivation function.                         |
+| `controller`   | `AbortController?`      | For cancelling the solve operation.              |
+| `counterStart` | `number?`               | Initial counter value. Defaults to `0`.          |
+| `counterStep`  | `number?`               | Increment between attempts. Defaults to `1`.     |
+| `counterMode`  | `'uint32' \| 'string'?` | Counter encoding format. Defaults to `'uint32'`. |
+| `timeout`      | `number?`               | Timeout in milliseconds. Defaults to `90000`.    |
 
 #### `solveChallengeWorkers(options): Promise<Solution | null>`
 
 Solves a challenge using multiple Web Workers in parallel. Each worker tests a different interleaved subset of counter values. Automatically retries with fewer workers on out-of-memory errors.
 
-| Option | Type | Description |
-|---|---|---|
-| `challenge` | `Challenge` | The challenge to solve. |
-| `concurrency` | `number` | Number of workers to use (max 16). |
-| `createWorker` | `(algorithm: string) => Worker \| Promise<Worker>` | Factory function to create a worker. |
-| `controller` | `AbortController?` | For cancelling the solve operation. |
-| `counterMode` | `'uint32' \| 'string'?` | Counter encoding format. |
-| `onOutOfMemory` | `(concurrency: number) => number \| void?` | Called on OOM; return new concurrency to retry or falsy to abort. |
-| `timeout` | `number?` | Timeout in milliseconds. |
+| Option          | Type                                               | Description                                                       |
+| --------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
+| `challenge`     | `Challenge`                                        | The challenge to solve.                                           |
+| `concurrency`   | `number`                                           | Number of workers to use (max 16).                                |
+| `createWorker`  | `(algorithm: string) => Worker \| Promise<Worker>` | Factory function to create a worker.                              |
+| `controller`    | `AbortController?`                                 | For cancelling the solve operation.                               |
+| `counterMode`   | `'uint32' \| 'string'?`                            | Counter encoding format.                                          |
+| `onOutOfMemory` | `(concurrency: number) => number \| void?`         | Called on OOM; return new concurrency to retry or falsy to abort. |
+| `timeout`       | `number?`                                          | Timeout in milliseconds.                                          |
 
 #### `verifySolution(options: VerifySolutionOptions): Promise<VerifySolutionResult>`
 
 Verifies a submitted solution against a challenge. Checks expiration, challenge signature integrity, and that the derived key matches the solution.
 
-| Option | Type | Description |
-|---|---|---|
-| `challenge` | `Challenge` | The original challenge. |
-| `solution` | `Solution` | The solution to verify. |
-| `hmacSignatureSecret` | `string` | HMAC secret used when the challenge was created. Throws if missing or empty. |
-| `deriveKey` | `DeriveKeyFunction` | Key derivation function. |
-| `counterMode` | `'uint32' \| 'string'?` | Counter encoding format. |
-| `hmacAlgorithm` | `HmacAlgorithm?` | HMAC digest algorithm: `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
-| `hmacKeySignatureSecret` | `string?` | HMAC secret for verifying derived-key signatures. Throws if empty. |
+| Option                   | Type                    | Description                                                                                                 |
+| ------------------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `challenge`              | `Challenge`             | The original challenge.                                                                                     |
+| `solution`               | `Solution`              | The solution to verify.                                                                                     |
+| `hmacSignatureSecret`    | `string`                | HMAC secret used when the challenge was created. Throws if missing or empty.                                |
+| `deriveKey`              | `DeriveKeyFunction`     | Key derivation function.                                                                                    |
+| `counterMode`            | `'uint32' \| 'string'?` | Counter encoding format.                                                                                    |
+| `hmacAlgorithm`          | `HmacAlgorithm?`        | HMAC digest algorithm: `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
+| `hmacKeySignatureSecret` | `string?`               | HMAC secret for verifying derived-key signatures. Throws if empty.                                          |
 
 Returns `VerifySolutionResult`:
 
-| Field | Type | Description |
-|---|---|---|
-| `verified` | `boolean` | Whether the solution is valid. |
-| `expired` | `boolean` | Whether the challenge has expired. |
+| Field              | Type              | Description                                 |
+| ------------------ | ----------------- | ------------------------------------------- |
+| `verified`         | `boolean`         | Whether the solution is valid.              |
+| `expired`          | `boolean`         | Whether the challenge has expired.          |
 | `invalidSignature` | `boolean \| null` | Whether the challenge signature is invalid. |
-| `invalidSolution` | `boolean \| null` | Whether the solution is incorrect. |
-| `time` | `number` | Time taken to verify in milliseconds. |
+| `invalidSolution`  | `boolean \| null` | Whether the solution is incorrect.          |
+| `time`             | `number`          | Time taken to verify in milliseconds.       |
 
 #### `verifyFieldsHash(options): Promise<boolean>`
 
 Verifies the SHA hash of specified form fields. Neither `verifyServerSignature` nor the framework plugins call this; for Sentinel payloads that include `fields` and `fieldsHash`, call it yourself (see [`/docs/server-signatures.md`](/docs/server-signatures.md#form-fields-hash)).
 
-| Option | Type | Description |
-|---|---|---|
-| `formData` | `FormData \| Record<string, unknown>` | The form data to verify. |
-| `fields` | `string[]` | Field names to include in the hash. |
-| `fieldsHash` | `string` | The expected hash value. |
-| `algorithm` | `string?` | Hash algorithm: `'SHA-1'`, `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
+| Option       | Type                                  | Description                                                                                                     |
+| ------------ | ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `formData`   | `FormData \| Record<string, unknown>` | The form data to verify.                                                                                        |
+| `fields`     | `string[]`                            | Field names to include in the hash.                                                                             |
+| `fieldsHash` | `string`                              | The expected hash value.                                                                                        |
+| `algorithm`  | `string?`                             | Hash algorithm: `'SHA-1'`, `'SHA-256'`, `'SHA-384'` or `'SHA-512'` (throws otherwise). Defaults to `'SHA-256'`. |
 
 #### `verifyServerSignature(options): Promise<VerifyServerSignatureResult>`
 
-Verifies a server signature payload from ALTCHA Sentinel.
+Verifies a server signature payload from ALTCHA Sentinel. This is the v2 form, used by the default export (`import { verifyServerSignature } from 'altcha-lib'`). It takes a single options object. The v1 form, `verifyServerSignature(payload, hmacKey)` with positional arguments, is only exported from `altcha-lib/v1` (see [v1](#v1-altcha-libv1)).
 
-| Option | Type | Description |
-|---|---|---|
-| `payload` | `ServerSignaturePayload` | The payload to verify. |
-| `hmacSecret` | `string` | The HMAC secret. Throws if missing or empty. |
+```ts
+import { verifyServerSignature } from 'altcha-lib';
 
-Throws if `payload.algorithm` is not exactly `'SHA-1'`, `'SHA-256'`, `'SHA-384'` or `'SHA-512'`. The algorithm is not covered by the signature, so it is validated before use. SHA-1 is accepted because Sentinel signs v1 challenges with the challenge's own algorithm.
+const result = await verifyServerSignature({
+	payload,
+	hmacSecret: API_KEY_SECRET,
+});
+```
+
+| Option       | Type                               | Description                                                                                           |
+| ------------ | ---------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `payload`    | `string \| ServerSignaturePayload` | The payload to verify: the base64-encoded JSON string submitted by the widget, or its decoded object. |
+| `hmacSecret` | `string`                           | The HMAC secret (the API key's secret). Throws if missing or empty.                                   |
+
+Returns `verified: false` with `invalidSolution: true` if a string payload does not decode to an object, or if `payload.algorithm` is missing. Throws if `payload.algorithm` is anything other than `'SHA-1'`, `'SHA-256'`, `'SHA-384'` or `'SHA-512'`. The algorithm is not covered by the signature, so it is checked before use. SHA-1 is accepted because Sentinel signs v1 challenges with the challenge's own algorithm.
 
 Returns `VerifyServerSignatureResult` (extends `VerifySolutionResult`):
 
-| Field | Type | Description |
-|---|---|---|
-| `verified` | `boolean` | Whether the signature is valid. |
-| `verificationData` | `ServerSignatureVerificationData \| null` | Parsed verification data. |
+| Field              | Type                                      | Description                                                                                |
+| ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `verified`         | `boolean`                                 | Whether the signature is valid.                                                            |
+| `verificationData` | `ServerSignatureVerificationData \| null` | Parsed verification data, keyed by the signed field names (e.g. `data['device.browser']`). |
 
 #### `verifyServer(options: VerifyServerOptions): Promise<VerifyServerResult>`
 
-Verifies a payload remotely by calling ALTCHA Sentinel's `POST /v1/verify/signature` API, instead of verifying the HMAC signature locally.
+Verifies a payload remotely by calling ALTCHA Sentinel's verify signature API, instead of verifying the HMAC signature locally. Supports Sentinel v2 (`POST /v2/verify/signature`) and Sentinel v1 (`POST /v1/verify/signature`).
 
-| Option | Type | Description |
-|---|---|---|
-| `payload` | `string \| ServerSignaturePayload \| Record<string, unknown>` | The payload to verify, as received from `POST /v1/verify`. |
-| `url` | `string` | Full URL of the Sentinel `/v1/verify/signature` endpoint. |
-| `secret` | `string?` | API key secret. If provided, Sentinel checks that it matches the API key associated with the payload. |
-| `fetch` | `typeof fetch?` | Custom fetch implementation. Defaults to the global `fetch`. |
-| `headers` | `Record<string, string>?` | Additional headers to send with the request. |
-| `controller` | `AbortController?` | For cancelling the verification request. |
-| `timeout` | `number?` | Per-attempt request timeout in milliseconds. Defaults to `10000`. |
-| `retries` | `number?` | Number of retry attempts after the first try. Defaults to `0`. |
-| `retryDelay` | `number?` | Base delay in milliseconds between retries. Defaults to `300`. |
-| `retryBackoff` | `'fixed' \| 'exponential'?` | Backoff strategy for `retryDelay`. Defaults to `'exponential'`. |
+```ts
+import { verifyServer } from 'altcha-lib';
+
+// Sentinel v2: authenticate with a restricted or full API key
+const v2Result = await verifyServer({
+	payload,
+	url: 'https://sentinel.example.com/v2/verify/signature',
+	apiKey: { id: API_KEY_ID, secret: API_KEY_SECRET },
+});
+
+// Sentinel v1: no credentials; `secret` is optional
+const v1Result = await verifyServer({
+	payload,
+	url: 'https://sentinel.example.com/v1/verify/signature',
+	secret: API_KEY_SECRET,
+});
+```
+
+| Option         | Type                                                          | Description                                                                                                                                               |
+| -------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `payload`      | `string \| ServerSignaturePayload \| Record<string, unknown>` | The payload to verify, as received from `POST /v2/verify` (or `POST /v1/verify` on Sentinel v1).                                                          |
+| `url`          | `string`                                                      | Full URL of the Sentinel endpoint: `/v2/verify/signature` or `/v1/verify/signature`.                                                                      |
+| `apiKey`       | `{ id: string, secret: string }?`                             | Restricted or full API key of the account that owns the payload's API key, sent as `Authorization: Basic base64(id:secret)`. Required by Sentinel v2.     |
+| `secret`       | `string?`                                                     | v1 Sentinel only (`/v1/verify/signature`): API key secret sent in the request body, checked against the payload's API key. Not sent when `apiKey` is set. |
+| `fetch`        | `typeof fetch?`                                               | Custom fetch implementation. Defaults to the global `fetch`.                                                                                              |
+| `headers`      | `Record<string, string>?`                                     | Additional headers to send with the request. They override the `Authorization` header set from `apiKey`.                                                  |
+| `controller`   | `AbortController?`                                            | For cancelling the verification request.                                                                                                                  |
+| `timeout`      | `number?`                                                     | Per-attempt request timeout in milliseconds. Defaults to `10000`.                                                                                         |
+| `retries`      | `number?`                                                     | Number of retry attempts after the first try. Network errors, timeouts and 5xx responses are retried; 4xx responses are not. Defaults to `0`.             |
+| `retryDelay`   | `number?`                                                     | Base delay in milliseconds between retries. Defaults to `300`.                                                                                            |
+| `retryBackoff` | `'fixed' \| 'exponential'?`                                   | Backoff strategy for `retryDelay`. Defaults to `'exponential'`.                                                                                           |
 
 Returns `VerifyServerResult`:
 
-| Field | Type | Description |
-|---|---|---|
-| `verified` | `boolean` | Whether the payload was successfully verified. |
-| `apiKey` | `string \| null?` | API key associated with the verification. |
-| `reason` | `string?` | Reason or error message if verification failed. |
-| `verificationData` | `ServerSignatureVerificationData \| null?` | Verification data returned by Sentinel. |
+| Field              | Type                                       | Description                                                                                                                                                                               |
+| ------------------ | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verified`         | `boolean`                                  | Whether the payload was successfully verified.                                                                                                                                            |
+| `apiKey`           | `string \| null?`                          | API key associated with the verification.                                                                                                                                                 |
+| `reason`           | `string?`                                  | Why verification failed: Sentinel's `reason` (e.g. `PAYLOAD_ALREADY_USED`), the `code` of an error response (e.g. `UNAUTHORIZED`), `HTTP_<status>`, `ABORTED` or a network error message. |
+| `verificationData` | `ServerSignatureVerificationData \| null?` | Verification data returned by Sentinel, flattened to the same shape as `verifyServerSignature` returns (`data['device.browser']`).                                                        |
 
 #### `obfuscate(str: string, options?): Promise<string>`
 
@@ -259,12 +292,12 @@ Returns `VerifyServerResult`:
 
 Encrypts a string using AES-GCM, with the key derived from a PoW challenge. Returns a base64-encoded payload.
 
-| Option | Type | Description |
-|---|---|---|
-| `counterMin` | `number?` | Minimum counter value. Defaults to `20`. |
-| `counterMax` | `number?` | Maximum counter value. Defaults to `200`. |
-| `deriveKey` | `DeriveKeyFunction?` | Key derivation function. Defaults to PBKDF2. |
-| `...` | | Any `CreateChallengeOptions` fields. |
+| Option       | Type                 | Description                                  |
+| ------------ | -------------------- | -------------------------------------------- |
+| `counterMin` | `number?`            | Minimum counter value. Defaults to `20`.     |
+| `counterMax` | `number?`            | Maximum counter value. Defaults to `200`.    |
+| `deriveKey`  | `DeriveKeyFunction?` | Key derivation function. Defaults to PBKDF2. |
+| `...`        |                      | Any `CreateChallengeOptions` fields.         |
 
 #### `deobfuscate(obfuscatedData: string, options?): Promise<string>`
 
@@ -272,11 +305,11 @@ Encrypts a string using AES-GCM, with the key derived from a PoW challenge. Retu
 
 Decrypts an obfuscated string by solving the embedded PoW challenge and using the derived key.
 
-| Option | Type | Description |
-|---|---|---|
-| `concurrency` | `number?` | Worker concurrency. Defaults to up to 4. |
-| `createWorker` | `(algorithm: string) => Worker?` | Factory to create a worker for solving. |
-| `deriveKey` | `DeriveKeyFunction?` | Key derivation function. Defaults to PBKDF2. |
+| Option         | Type                             | Description                                  |
+| -------------- | -------------------------------- | -------------------------------------------- |
+| `concurrency`  | `number?`                        | Worker concurrency. Defaults to up to 4.     |
+| `createWorker` | `(algorithm: string) => Worker?` | Factory to create a worker for solving.      |
+| `deriveKey`    | `DeriveKeyFunction?`             | Key derivation function. Defaults to PBKDF2. |
 
 #### `randomInt(max: number, min?: number): number`
 
@@ -287,13 +320,13 @@ Returns a cryptographically random integer between `min` (default `1`) and `max`
 A `Map` subclass with a fixed maximum size. When full, the oldest entry is evicted on insertion.
 
 ```ts
-new CappedMap({ maxSize: number })
+new CappedMap({ maxSize: number });
 ```
 
 #### `enum HmacAlgorithm`
 
-| Value | String |
-|---|---|
+| Value                   | String      |
+| ----------------------- | ----------- |
 | `HmacAlgorithm.SHA_256` | `'SHA-256'` |
 | `HmacAlgorithm.SHA_384` | `'SHA-384'` |
 | `HmacAlgorithm.SHA_512` | `'SHA-512'` |
@@ -306,16 +339,16 @@ new CappedMap({ maxSize: number })
 
 Creates a v1 SHA-based proof-of-work challenge.
 
-| Option | Type | Description |
-|---|---|---|
-| `hmacKey` | `string` | **Required.** HMAC key for signing. |
-| `algorithm` | `'SHA-1' \| 'SHA-256' \| 'SHA-512'?` | Hash algorithm. Defaults to `'SHA-256'`. |
-| `expires` | `Date?` | Expiry date embedded in the salt. |
-| `maxNumber` | `number?` | Maximum random number. Defaults to `1000000`. |
-| `number` | `number?` | Fixed number (skips random selection). |
-| `params` | `Record<string, string>?` | Extra parameters embedded in the salt. |
-| `salt` | `string?` | Custom salt value. |
-| `saltLength` | `number?` | Random salt length in bytes. Defaults to `12`. |
+| Option       | Type                                 | Description                                    |
+| ------------ | ------------------------------------ | ---------------------------------------------- |
+| `hmacKey`    | `string`                             | **Required.** HMAC key for signing.            |
+| `algorithm`  | `'SHA-1' \| 'SHA-256' \| 'SHA-512'?` | Hash algorithm. Defaults to `'SHA-256'`.       |
+| `expires`    | `Date?`                              | Expiry date embedded in the salt.              |
+| `maxNumber`  | `number?`                            | Maximum random number. Defaults to `1000000`.  |
+| `number`     | `number?`                            | Fixed number (skips random selection).         |
+| `params`     | `Record<string, string>?`            | Extra parameters embedded in the salt.         |
+| `salt`       | `string?`                            | Custom salt value.                             |
+| `saltLength` | `number?`                            | Random salt length in bytes. Defaults to `12`. |
 
 #### `verifySolution(payload: string | Payload, hmacKey: string, checkExpires?: boolean): Promise<boolean>`
 
@@ -327,7 +360,7 @@ Verifies the hash of specified form fields.
 
 #### `verifyServerSignature(payload: string | ServerSignaturePayload, hmacKey: string): Promise<{ verified: boolean, verificationData: ServerSignatureVerificationData | null }>`
 
-Verifies a v1 server signature.
+Verifies a v1 server signature. This is the v1 form, exported only from `altcha-lib/v1`. The default export (`altcha-lib`) provides the v2 form, `verifyServerSignature({ payload, hmacSecret })`.
 
 #### `solveChallenge(challenge, salt, algorithm?, max?, start?): { promise: Promise<Solution | null>, controller: AbortController }`
 

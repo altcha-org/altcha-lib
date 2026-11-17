@@ -5,6 +5,7 @@ import {
 	constantTimeEqual,
 	hash,
 	hmac,
+	parsePayload,
 	timeDuration,
 } from './helpers.js';
 import {
@@ -68,15 +69,42 @@ export async function verifyFieldsHash(options: {
 	return bufferToHex(await hash(algorithm, lines.join('\n'))) === fieldsHash;
 }
 
+/**
+ * Verifies a server-signed payload from ALTCHA Sentinel locally with the API key's secret.
+ * `payload` is the base64-encoded JSON string submitted by the widget, or its decoded object.
+ * An undecodable payload or one without `algorithm` returns `verified: false` with
+ * `invalidSolution: true`.
+ */
 export async function verifyServerSignature(options: {
-	payload: ServerSignaturePayload;
+	payload: string | ServerSignaturePayload;
 	hmacSecret: string;
 }): Promise<VerifyServerSignatureResult> {
-	const { hmacSecret, payload } = options;
-	// `algorithm` is not covered by the signature, so it must be validated before use.
-	assertAlgorithm(payload.algorithm, SERVER_SIGNATURE_ALGORITHMS);
+	const { hmacSecret } = options;
 	assertSecret('hmacSecret', hmacSecret);
 	const start = performance.now();
+	const payload = (
+		typeof options.payload === 'string'
+			? parsePayload(options.payload)
+			: options.payload
+	) as ServerSignaturePayload | null;
+	if (
+		!payload ||
+		typeof payload !== 'object' ||
+		payload.algorithm === undefined ||
+		payload.algorithm === null ||
+		payload.algorithm === ''
+	) {
+		return {
+			expired: false,
+			invalidSignature: null,
+			invalidSolution: true,
+			time: timeDuration(start),
+			verificationData: null,
+			verified: false,
+		};
+	}
+	// `algorithm` is not covered by the signature, so it must be validated before use.
+	assertAlgorithm(payload.algorithm, SERVER_SIGNATURE_ALGORITHMS);
 	const signature = bufferToHex(
 		await hmac(
 			payload.algorithm as HmacAlgorithm,

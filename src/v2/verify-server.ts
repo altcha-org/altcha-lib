@@ -1,11 +1,17 @@
 import { delay } from './helpers.js';
-import type { VerifyServerOptions, VerifyServerResult } from './types.js';
+import type {
+	ServerSignatureVerificationData,
+	VerifyServerApiKey,
+	VerifyServerOptions,
+	VerifyServerResult,
+} from './types.js';
 
-/** Verifies a payload remotely via the ALTCHA Sentinel `/v1/verify/signature` API. */
+/** Verifies a payload remotely via the ALTCHA Sentinel `/v2/verify/signature` API. */
 export async function verifyServer(
 	options: VerifyServerOptions
 ): Promise<VerifyServerResult> {
 	const {
+		apiKey,
 		controller,
 		fetch: fetchImpl = fetch,
 		headers,
@@ -17,7 +23,13 @@ export async function verifyServer(
 		timeout = 10_000,
 		url,
 	} = options;
-	const body = JSON.stringify({ payload, secret });
+	// `secret` is only understood by a v1 Sentinel; Sentinel v2 rejects it next to credentials.
+	const body = JSON.stringify(
+		apiKey || secret === undefined ? { payload } : { payload, secret }
+	);
+	const authHeaders: Record<string, string> = apiKey
+		? { Authorization: basicAuthorization(apiKey) }
+		: {};
 
 	for (let attempt = 0; attempt <= retries; attempt++) {
 		if (controller?.signal.aborted) {
@@ -32,24 +44,27 @@ export async function verifyServer(
 				body,
 				headers: {
 					'Content-Type': 'application/json',
+					...authHeaders,
 					...headers,
 				},
 				method: 'POST',
 				signal: attemptController.signal,
 			});
-			if (response.status === 400) {
-				const data = await response
-					.json()
-					.catch(() => null as { error?: string } | null);
-				return {
-					verified: false,
-					reason: data?.error ?? `HTTP_${response.status}`,
-				};
-			}
 			if (!response.ok) {
-				throw new Error(`HTTP_${response.status}`);
+				const reason = await errorReason(response);
+				// A 4xx (bad payload, bad credentials, wrong account) fails the same way again.
+				if (response.status >= 400 && response.status < 500) {
+					return { verified: false, reason };
+				}
+				throw new Error(reason);
 			}
-			return (await response.json()) as VerifyServerResult;
+			const result = (await response.json()) as VerifyServerResult;
+			return {
+				...result,
+				verificationData: isPlainObject(result.verificationData)
+					? flattenVerificationData(result.verificationData)
+					: result.verificationData,
+			};
 		} catch (err) {
 			if (attempt >= retries) {
 				return {
@@ -66,4 +81,55 @@ export async function verifyServer(
 		}
 	}
 	return { verified: false, reason: 'NETWORK_ERROR' };
+}
+
+/** `Basic base64(id:secret)`, UTF-8 encoded. */
+function basicAuthorization(apiKey: VerifyServerApiKey) {
+	const bytes = new TextEncoder().encode(`${apiKey.id}:${apiKey.secret}`);
+	return `Basic ${btoa(String.fromCharCode(...bytes))}`;
+}
+
+/**
+ * The `code` of a Sentinel error body (`{ code, error, statusCode }`), else its `error`
+ * (a v1 Sentinel sends only `error`), else `HTTP_<status>`.
+ */
+async function errorReason(response: Response) {
+	const data: unknown = await response.json().catch(() => null);
+	if (isPlainObject(data)) {
+		if (typeof data.code === 'string' && data.code) {
+			return data.code;
+		}
+		if (typeof data.error === 'string' && data.error) {
+			return data.error;
+		}
+	}
+	return `HTTP_${response.status}`;
+}
+
+/**
+ * Sentinel v2 nests `verificationData` on dots (`{ device: { browser } }`); flattens it
+ * back to the signed keys (`'device.browser'`) that `verifyServerSignature` returns.
+ * Already-flat data (a v1 Sentinel) is returned unchanged.
+ */
+function flattenVerificationData(
+	data: Record<string, unknown>
+): ServerSignatureVerificationData {
+	const entries: [string, unknown][] = [];
+	const walk = (obj: Record<string, unknown>, prefix: string) => {
+		for (const [key, value] of Object.entries(obj)) {
+			const path = prefix ? `${prefix}.${key}` : key;
+			if (isPlainObject(value)) {
+				walk(value, path);
+			} else {
+				entries.push([path, value]);
+			}
+		}
+	};
+	walk(data, '');
+	// `Object.fromEntries` keeps a `__proto__` key an own property.
+	return Object.fromEntries(entries);
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+	return !!value && typeof value === 'object' && !Array.isArray(value);
 }

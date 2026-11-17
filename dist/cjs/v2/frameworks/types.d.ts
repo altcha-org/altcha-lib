@@ -41,7 +41,8 @@ export interface AltchaOptions {
     store?: Store;
     /**
      * When set, Sentinel-issued (server-signed) payloads are verified remotely via
-     * `POST /v1/verify/signature` instead of locally with `hmacSignatureSecret`.
+     * `POST /v2/verify/signature` (Sentinel v2) or `POST /v1/verify/signature` (Sentinel v1)
+     * instead of locally with `hmacSignatureSecret`.
      */
     verifyServer?: AltchaVerifyServerOptions;
 }

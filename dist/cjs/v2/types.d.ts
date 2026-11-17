@@ -136,6 +136,10 @@ export interface ServerSignaturePayload {
     verificationData: string;
     verified: boolean;
 }
+/**
+ * Parsed `verificationData`, keyed by the flat form field names Sentinel signs
+ * (e.g. `data['device.browser']`), for both local and remote verification.
+ */
 export interface ServerSignatureVerificationData {
     [key: string]: string | unknown;
     classification?: ServerClassification;
@@ -240,19 +244,36 @@ export interface VerifyResult {
 export interface VerifyServerSignatureResult extends VerifySolutionResult {
     verificationData?: ServerSignatureVerificationData | null;
 }
+export interface VerifyServerApiKey {
+    /**
+     * API key id (`key_...`).
+     */
+    id: string;
+    /**
+     * API key secret.
+     */
+    secret: string;
+}
 export interface VerifyServerOptions {
     /**
-     * The payload to verify, as received from `POST /v1/verify`
-     * (either the raw string or the decoded object).
+     * The payload to verify, as received from `POST /v2/verify` (Sentinel v2) or
+     * `POST /v1/verify` (Sentinel v1), either the raw string or the decoded object.
      */
     payload: string | ServerSignaturePayload | Record<string, unknown>;
     /**
-     * Full URL of the Sentinel `/v1/verify/signature` endpoint.
+     * Full URL of the Sentinel verify signature endpoint: `/v2/verify/signature`
+     * (Sentinel v2, with `apiKey`) or `/v1/verify/signature` (Sentinel v1, with optional `secret`).
      */
     url: string;
     /**
-     * API key secret. If provided, Sentinel checks that it matches the
-     * API key associated with the payload.
+     * Restricted or full API key of the account that owns the payload's API key, sent as
+     * `Authorization: Basic base64(id:secret)`. Required by Sentinel v2's `/v2/verify/signature`.
+     */
+    apiKey?: VerifyServerApiKey;
+    /**
+     * API key secret, sent in the request body. Only for a v1 Sentinel's
+     * `/v1/verify/signature`, which checks it against the payload's API key.
+     * Not sent when `apiKey` is set; Sentinel v2 rejects it on `/v2`.
      */
     secret?: string;
     /**
@@ -260,7 +281,8 @@ export interface VerifyServerOptions {
      */
     fetch?: typeof fetch;
     /**
-     * Additional headers to send with the request.
+     * Additional headers to send with the request. Override the `Authorization` header
+     * set from `apiKey`.
      */
     headers?: Record<string, string>;
     /**
@@ -273,8 +295,8 @@ export interface VerifyServerOptions {
      */
     timeout?: number;
     /**
-     * Number of retry attempts after the first try.
-     * Defaults to `0` (no retries).
+     * Number of retry attempts after the first try. Network errors, timeouts and 5xx
+     * responses are retried; 4xx responses are not.
      */
     retries?: number;
     /**
@@ -290,7 +312,16 @@ export interface VerifyServerOptions {
 }
 export interface VerifyServerResult {
     apiKey?: string | null;
+    /**
+     * Why verification failed: Sentinel's `reason` (e.g. `PAYLOAD_ALREADY_USED`), the
+     * `code` of an error response (e.g. `UNAUTHORIZED`), `HTTP_<status>`, `ABORTED`
+     * or a network error message.
+     */
     reason?: string;
+    /**
+     * Verification data returned by Sentinel, flattened to the same shape as
+     * `verifyServerSignature` returns (`data['device.browser']`).
+     */
     verificationData?: ServerSignatureVerificationData | null;
     verified: boolean;
 }

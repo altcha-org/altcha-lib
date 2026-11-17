@@ -12,6 +12,7 @@ exports.constantTimeEqual = constantTimeEqual;
 exports.delay = delay;
 exports.hash = hash;
 exports.hmac = hmac;
+exports.parsePayload = parsePayload;
 exports.randomInt = randomInt;
 exports.sortKeys = sortKeys;
 exports.timeDuration = timeDuration;
@@ -107,6 +108,21 @@ async function hmac(algorithm, data, keyStr) {
         ? new TextEncoder().encode(data)
         : data);
     return new Uint8Array(signature);
+}
+/**
+ * Decodes a base64-encoded JSON payload, as submitted by the widget.
+ * Returns `null` if it is not valid base64 or JSON, or does not decode to an object.
+ */
+function parsePayload(payload) {
+    try {
+        const data = JSON.parse(atob(payload));
+        return data && typeof data === 'object' && !Array.isArray(data)
+            ? data
+            : null;
+    }
+    catch {
+        return null;
+    }
 }
 /** Generates a random integer between the specified minimum and maximum values (inclusive). */
 function randomInt(max, min = 1) {

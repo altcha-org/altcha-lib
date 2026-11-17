@@ -31,7 +31,30 @@ See [`/docs/store.md`](/docs/store.md) for details.
 ## Remote verification (Sentinel)
 
 Pass a `verifyServer` option to verify Sentinel-issued payloads remotely via Sentinel's
-`/v1/verify/signature` API instead of locally with `hmacSignatureSecret`.
+verify signature API instead of locally with `hmacSignatureSecret`. Both Sentinel v2 and v1 are
+supported.
+
+Sentinel v2 (`/v2/verify/signature`, authenticated with a restricted or full `apiKey`):
+
+```ts
+const altcha = create({
+  verifyServer: {
+    url: 'https://sentinel.example.com/v2/verify/signature',
+    apiKey: { id: API_KEY_ID, secret: API_KEY_SECRET }, // restricted or full key
+  },
+});
+```
+
+Sentinel v1 (`/v1/verify/signature`, no credentials; `secret` is optional):
+
+```ts
+const altcha = create({
+  verifyServer: {
+    url: 'https://sentinel.example.com/v1/verify/signature',
+    secret: API_KEY_SECRET, // optional
+  },
+});
+```
 
 See [`/docs/server-signatures.md#remote-verification-sentinel-api`](/docs/server-signatures.md#remote-verification-sentinel-api) for details.
 

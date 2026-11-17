@@ -1,7 +1,7 @@
 import { verifySolution } from '../pow.js';
 import { verifyServerSignature } from '../server-signature.js';
 import { verifyServer } from '../verify-server.js';
-import { bufferToHex, hmac } from '../helpers.js';
+import { bufferToHex, hmac, parsePayload } from '../helpers.js';
 import { HmacAlgorithm, } from '../types.js';
 export async function deriveHmacKeySecret(masterSecret) {
     return bufferToHex(await hmac(HmacAlgorithm.SHA_256, masterSecret, 'derived-secret'));
@@ -123,14 +123,6 @@ function getPayloadType(payload) {
         return 'client';
     }
     return null;
-}
-function parsePayload(payload) {
-    try {
-        return JSON.parse(atob(payload));
-    }
-    catch {
-        return null;
-    }
 }
 function verifyClientPayload(payload, deriveKey, hmacSignatureSecret, hmacKeySignatureSecret) {
     const { challenge, solution } = payload;
