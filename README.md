@@ -76,12 +76,12 @@ All plugins also support remote verification via ALTCHA Sentinel (`verifyServer`
 
 ## Compatibility
 
-| Runtime           | Version | Notes                                           |
-| ----------------- | ------: | ----------------------------------------------- |
-| Node.js           |     20+ | Argon2 available natively in 24.7+              |
-| Bun               |      1+ | Argon2 not available natively                   |
-| Deno              |      2+ | Argon2 not available natively                   |
-| WinterCG runtimes |       — | Use WebCrypto [algorithms](/docs/algorithms.md) |
+| Runtime           | Version | Notes                                                                                                                  |
+| ----------------- | ------: | ---------------------------------------------------------------------------------------------------------------------- |
+| Node.js           |     20+ | Argon2 available natively in 24.7+                                                                                     |
+| Bun               |      1+ | Argon2 available natively in 1.4+                                                                                      |
+| Deno              |      2+ | Argon2 available in WebCrypto (`crypto.subtle`) in 2.9+; requires a [custom `deriveKey`](/docs/algorithms.md#argon2)   |
+| WinterCG runtimes |       — | Use WebCrypto [algorithms](/docs/algorithms.md)                                                                        |
 
 ## Run Examples
 

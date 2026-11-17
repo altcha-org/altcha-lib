@@ -6,7 +6,7 @@ The package provides implementations of several key-derivation algorithms.
 
 * `altcha-lib/algorithms/pbkdf2`
 * `altcha-lib/algorithms/sha`
-* `altcha-lib/algorithms/argon2id` *(requires Node.js 24.7+)*
+* `altcha-lib/algorithms/argon2id` *(requires Node.js 24.7+ or Bun 1.4+)*
 * `altcha-lib/algorithms/scrypt`
 
 ### WebCrypto (`crypto.subtle`)
