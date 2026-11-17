@@ -3,6 +3,21 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.9.0] - 2026-11-17
+
+### Added
+
+- `verifyServer` supports Sentinel v2's `POST /v2/verify/signature`. A new `apiKey: { id, secret }` option (a restricted or full key) is sent as `Authorization: Basic base64(id:secret)`.
+- `verifyServerSignature` accepts the base64-encoded JSON string payload (`payload: string | ServerSignaturePayload`), decoded the same way the framework plugins decode it.
+
+### Changed
+
+- `verifyServer` sends only `{ payload }` in the request body when `apiKey` is set. `secret` is for a v1 Sentinel only, and Sentinel v2 rejects it on `/v2`.
+- `verifyServer` does not retry 4xx responses. An error response's `reason` is the `code` from Sentinel's error body (`{ code, error, statusCode }`), falling back to `error`, then `HTTP_<status>`.
+- `verifyServer` flattens Sentinel v2's nested `verificationData` (`{ device: { browser } }`) to the keys `verifyServerSignature` returns (`data['device.browser']`). Local and remote results now have the same shape.
+- `verifyServerSignature` returns `verified: false` with `invalidSolution: true` for an undecodable payload or a missing `algorithm`, instead of throwing. An unsupported `algorithm` still throws.
+- Docs show remote verification against both Sentinel v2 (`/v2/verify/signature` with `apiKey`) and Sentinel v1 (`/v1/verify/signature` with the optional `secret`), in the README, `docs/server-signatures.md` and every framework guide. The README states that the default export provides the v2 `verifyServerSignature({ payload, hmacSecret })` form, and that the v1 `(payload, hmacKey)` form comes from `altcha-lib/v1`.
+
 ## [2.8.0] - 2026-10-24
 
 ### Fixed
