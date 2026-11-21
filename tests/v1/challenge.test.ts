@@ -327,6 +327,78 @@ describe('challenge', () => {
 				);
 				expect(ok).toEqual(false);
 			});
+
+			// Moves the tail of the signed salt, starting at `&<cutAt>`, into a string
+			// `number`; the verifier re-adds the '&' so the hashed bytes are unchanged.
+			function moveSaltTailToNumber(
+				challenge: Challenge,
+				number: number,
+				cutAt: string
+			) {
+				const body = challenge.salt.slice(0, -1);
+				const cut = body.indexOf(`&${cutAt}=`);
+				return {
+					algorithm: challenge.algorithm,
+					challenge: challenge.challenge,
+					number: (body.slice(cut + 1) + '&' + number) as unknown as number,
+					salt: body.slice(0, cut),
+					signature: challenge.signature,
+				};
+			}
+
+			it('should not verify an expired challenge with expires moved into a string number', async () => {
+				const number = 4242;
+				const challenge = await createChallenge({
+					number,
+					hmacKey,
+					expires: new Date(Date.now() - 5 * 60 * 1000),
+					params: { user: 'alice', action: 'login' },
+				});
+				const payload = moveSaltTailToNumber(challenge, number, 'expires');
+				expect(extractParams(payload)).not.toHaveProperty('expires');
+				expect(await verifySolution(payload, hmacKey)).toEqual(false);
+				expect(
+					await verifySolution(btoa(JSON.stringify(payload)), hmacKey)
+				).toEqual(false);
+			});
+
+			it('should not verify a challenge with signed params moved into a string number', async () => {
+				const number = 7;
+				const challenge = await createChallenge({
+					number,
+					hmacKey,
+					params: { user: 'alice', scope: 'admin-only' },
+				});
+				const payload = moveSaltTailToNumber(challenge, number, 'scope');
+				expect(extractParams(payload)).toEqual({ user: 'alice' });
+				expect(await verifySolution(payload, hmacKey)).toEqual(false);
+			});
+
+			it('should not verify a number sent as an array', async () => {
+				const number = 4242;
+				const challenge = await createChallenge({
+					number,
+					hmacKey,
+					expires: new Date(Date.now() - 5 * 60 * 1000),
+					params: { user: 'alice' },
+				});
+				const payload = moveSaltTailToNumber(challenge, number, 'expires');
+				expect(
+					await verifySolution(
+						{ ...payload, number: [payload.number] as unknown as number },
+						hmacKey
+					)
+				).toEqual(false);
+			});
+
+			it('createChallenge should reject a non-integer number', async () => {
+				await expect(
+					createChallenge({
+						hmacKey,
+						number: 'expires=1&4242' as unknown as number,
+					})
+				).rejects.toThrow('number must be an integer');
+			});
 		});
 	});
 

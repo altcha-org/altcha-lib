@@ -34,6 +34,11 @@ async function createChallenge(options) {
     if (!salt.endsWith('&')) {
         salt = salt + '&';
     }
+    if (options.number !== undefined && !Number.isInteger(options.number)) {
+        // A non-integer number (e.g. a string containing '&') could carry part of
+        // the signed salt, moving the salt/number boundary past the delimiter.
+        throw new Error(`number must be an integer. Got: ${String(options.number)}`);
+    }
     const number = options.number === undefined ? (0, helpers_js_1.randomInt)(maxnumber) : options.number;
     const challenge = await (0, helpers_js_1.hashHex)(algorithm, salt + number);
     return {
@@ -72,6 +77,10 @@ async function verifySolution(payload, hmacKey, checkExpires = true) {
         catch {
             return false;
         }
+    }
+    // Reject before hashing; see createChallenge.
+    if (!Number.isInteger(payload?.number)) {
+        return false;
     }
     const params = extractParams(payload);
     const expires = params.expires || params.expire;

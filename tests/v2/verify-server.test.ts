@@ -143,7 +143,8 @@ describe('Verify Server', () => {
 				const fetchMock = vi.fn().mockResolvedValue(
 					jsonResponse(status, {
 						code: 'UNAUTHORIZED',
-						error: 'Basic authentication requires a restricted or full-access API key.',
+						error:
+							'Basic authentication requires a restricted or full-access API key.',
 						statusCode: status,
 					})
 				);
