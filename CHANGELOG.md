@@ -3,6 +3,12 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.10.0] - 2026-11-21
+
+### Security
+
+- v1 `verifySolution` returns `false` when `number` is not an integer. Before, a string `number` could carry the tail of the signed salt across the `&` delimiter: the challenge and signature still matched, but the expiry check and `extractParams` only saw the shortened salt. This let an expired challenge created with `params` and `expires` verify, and hid trailing signed params. v1 `createChallenge` throws for a non-integer `number`.
+
 ## [2.9.0] - 2026-11-17
 
 ### Added
@@ -252,6 +258,8 @@ First stable release, freezing the API for version 1.x.
 - `verifySolution` checks the expiration automatically when the salt contains `?expires=`. Pass `checkExpires: false` as the optional third argument to disable it.
 - `extractParams` extracts custom parameters from the base64-encoded payload, the payload object or the challenge object.
 
+[2.10.0]: https://github.com/altcha-org/altcha-lib/compare/v2.9.0...v2.10.0
+[2.9.0]: https://github.com/altcha-org/altcha-lib/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/altcha-org/altcha-lib/compare/v2.7.0...v2.8.0
 [2.7.0]: https://github.com/altcha-org/altcha-lib/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/altcha-org/altcha-lib/compare/v2.5.0...v2.6.0
